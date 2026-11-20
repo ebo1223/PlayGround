@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Superhero Quest</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="game">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">S</span><span>SUPERHERO QUEST</span></div>
+      <div class="status">
+        <div class="stat"><span class="stat-icon heart">♥</span><span id="healthText">100</span></div>
+        <div class="stat"><span class="stat-icon coin">◆</span><span id="scoreText">0</span></div>
+        <button id="soundBtn" class="icon-btn" aria-label="Toggle sound">♪</button>
+      </div>
+    </header>
+
+    <section id="screen" class="screen">
+      <canvas id="gameCanvas" width="960" height="540" aria-label="Game area"></canvas>
+
+      <div id="startPanel" class="panel start-panel">
+        <div class="panel-badge">NEW HERO</div>
+        <h1>THE CITY NEEDS<br><em>A HERO</em></h1>
+        <p>Fight villains, rescue citizens, and protect Metro City.</p>
+        <button id="startBtn" class="primary-btn">START QUEST <span>→</span></button>
+        <div class="controls-preview">
+          <div><span class="key">A</span><span class="key">D</span><small>Move</small></div>
+          <div><span class="key wide">SPACE</span><small>Jump</small></div>
+          <div><span class="key">J</span><small>Attack</small></div>
+        </div>
+      </div>
+
+      <div id="missionPanel" class="mission hidden">
+        <span class="mission-label">MISSION</span>
+        <strong id="missionTitle">Stop the villains</strong>
+        <div class="progress-track"><div id="missionProgress"></div></div>
+      </div>
+
+      <div id="endPanel" class="panel end-panel hidden">
+        <div class="panel-badge" id="endBadge">MISSION COMPLETE</div>
+        <h2 id="endTitle">METRO IS SAFE</h2>
+        <p id="endText">The city is safe thanks to you.</p>
+        <div class="final-score"><span>SCORE</span><strong id="finalScore">0</strong></div>
+        <button id="restartBtn" class="primary-btn">PLAY AGAIN <span>↻</span></button>
+      </div>
+
+      <div class="touch-controls" aria-label="Touch controls">
+        <div class="touch-left">
+          <button data-key="ArrowLeft" aria-label="Move left">‹</button>
+          <button data-key="ArrowRight" aria-label="Move right">›</button>
+        </div>
+        <div class="touch-right">
+          <button data-key="Space" aria-label="Jump">↑</button>
+          <button data-key="KeyJ" aria-label="Attack">⚡</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
