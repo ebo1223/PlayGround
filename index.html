@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#100d20">
+  <link rel="icon" href="data:,">
+  <title>Lucky Wheel — Spin & Win</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+    :root{--bg:#100d20;--panel:#1a1630;--panel2:#211b3c;--line:rgba(255,255,255,.09);--muted:#a19bb9;--white:#faf8ff;--gold:#ffcf67;--pink:#ff619b;--green:#73e7bd;--violet:#a88bff}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 48% 42%,#27204b 0%,#15112a 36%,#100d20 72%);color:var(--white);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.13;background-image:radial-gradient(#fff 0.65px,transparent .65px);background-size:27px 27px;mask-image:linear-gradient(to bottom,black,transparent 90%)}
+    button{font:inherit;color:inherit;cursor:pointer}
+    .app{max-width:1240px;margin:auto;padding:28px 42px 38px;position:relative}
+    header{height:58px;display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+    .brand{display:flex;align-items:center;gap:12px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;letter-spacing:-.4px}
+    .brand-mark{width:37px;height:37px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#ffd677,#f3a949);color:#322047;box-shadow:0 5px 22px #ffc55b44;font-size:20px}
+    .brand small{display:block;color:#a49dbb;font:600 9px 'DM Sans',sans-serif;letter-spacing:1.55px;margin-top:1px}
+    .header-right{display:flex;align-items:center;gap:14px}
+    .sound-btn,.help-btn{height:40px;width:40px;border-radius:13px;border:1px solid var(--line);background:#ffffff08;color:#c5bfd7;display:grid;place-items:center;font-size:17px;transition:.2s}
+    .sound-btn:hover,.help-btn:hover{background:#ffffff14;border-color:#ffffff24;color:#fff}
+    .wallet{height:42px;padding:0 15px 0 11px;border:1px solid #ffc95e38;border-radius:13px;background:linear-gradient(105deg,#ffcf671c,#ffcf6708);display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;letter-spacing:.1px}
+    .coin{width:23px;height:23px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#ffe59a,#efa837);color:#69420a;font-size:13px;box-shadow:0 2px 8px #f7bd4a55}
+    .hero{text-align:center;margin:10px 0 20px}
+    .eyebrow{display:inline-flex;align-items:center;gap:7px;color:var(--gold);font-size:10px;letter-spacing:2px;font-weight:800;text-transform:uppercase;margin-bottom:8px}
+    .eyebrow:before,.eyebrow:after{content:"";width:18px;height:1px;background:#ffcf6777}
+    h1{font:700 clamp(30px,4vw,42px)/1.1 'Space Grotesk',sans-serif;letter-spacing:-1.6px;margin:0;color:#fff}
+    h1 span{color:var(--gold)}
+    .subtitle{font-size:13px;color:#a49dbb;margin:9px 0 0}
+    .game-layout{display:grid;grid-template-columns:minmax(0,1fr) 292px;gap:24px;align-items:stretch;max-width:1055px;margin:0 auto}
+    .game-card{min-height:560px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(145deg,#201b3bde,#18142ede);box-shadow:0 28px 80px #08061172,inset 0 1px #ffffff08;padding:26px 30px 24px;position:relative;overflow:hidden}
+    .game-card:before{content:"";position:absolute;inset:-1px 18% auto;height:1px;background:linear-gradient(90deg,transparent,#ffd67566,transparent)}
+    .game-top{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:2}
+    .game-label{display:flex;align-items:center;gap:9px;font-size:12px;color:#d4cee5;font-weight:700;letter-spacing:.3px}
+    .live-dot{height:7px;width:7px;background:#79e8bc;border-radius:50%;box-shadow:0 0 10px #79e8bc}
+    .round-pill{border-radius:99px;background:#ffffff09;border:1px solid #ffffff0d;color:#a69fba;font-size:10px;font-weight:700;padding:7px 11px;letter-spacing:.8px}
+    .wheel-stage{height:366px;display:flex;justify-content:center;align-items:center;position:relative;margin:4px auto 0}
+    .wheel-aura{position:absolute;width:330px;height:330px;border-radius:50%;background:#a177ff12;filter:blur(37px)}
+    .pointer{position:absolute;z-index:5;top:7px;width:36px;height:45px;filter:drop-shadow(0 4px 5px #090711aa)}
+    .pointer svg{width:100%;height:100%;overflow:visible}
+    .wheel-shell{width:min(330px,74vw);height:min(330px,74vw);max-width:330px;max-height:330px;border-radius:50%;padding:11px;background:linear-gradient(135deg,#ffe6a1,#c98930 22%,#fff0b0 42%,#a76725 62%,#ffe39a 80%,#be812e);box-shadow:0 0 0 5px #211a39,0 0 0 7px #d69b45a6,0 17px 36px #090714aa,0 0 40px #d5a24822;position:relative;z-index:2;transition:filter .25s}
+    .wheel-shell:after{content:"";position:absolute;inset:5px;border-radius:50%;border:1px solid #fff3;pointer-events:none}
+    canvas{width:100%;height:100%;border-radius:50%;display:block;transform:rotate(0deg);transition:transform 5s cubic-bezier(.12,.75,.08,1);will-change:transform}
+    .hub{position:absolute;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;background:radial-gradient(circle at 34% 27%,#fff1c8,#f5be56 48%,#bd7628 100%);border:4px solid #fce4a0;box-shadow:0 2px 8px #311b19aa,inset 0 0 0 2px #a36624;display:grid;place-items:center;color:#704415;font-size:22px;text-shadow:0 1px #fff8}
+    .wheel-lights{position:absolute;inset:5px;border-radius:50%;z-index:3;pointer-events:none}
+    .wheel-lights i{position:absolute;display:block;width:5px;height:5px;border-radius:50%;background:#fff0b1;box-shadow:0 0 7px 2px #ffd36a;left:50%;top:50%;transform:rotate(var(--a)) translateY(-155px)}
+    .wheel-lights i:nth-child(odd){opacity:.42}
+    .control-area{display:flex;align-items:center;justify-content:center;gap:14px;position:relative;z-index:3;margin-top:1px}
+    .bet-control{height:53px;display:flex;align-items:center;background:#100d20a6;border:1px solid #ffffff15;border-radius:14px;padding:5px;gap:2px}
+    .bet-control button{border:0;background:#ffffff0b;height:39px;width:37px;border-radius:10px;color:#ddd5ef;font-size:20px;transition:.18s}
+    .bet-control button:hover:not(:disabled){background:#ffffff19;color:#fff}
+    .bet-control button:disabled{opacity:.35;cursor:not-allowed}
+    .bet-value{min-width:76px;text-align:center}
+    .bet-value small{display:block;color:#8f88a8;font-size:9px;font-weight:700;letter-spacing:1.15px;margin-bottom:1px}
+    .bet-value b{font-size:15px}
+    .spin-btn{height:57px;min-width:184px;padding:0 28px;border:0;border-radius:15px;color:#382344;background:linear-gradient(115deg,#ffe18b,#ffc34f 55%,#efa73b);font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:.45px;box-shadow:0 5px 0 #ad6d2b,0 9px 22px #ffbc4c32,inset 0 1px #fff8;transition:transform .15s,filter .2s,box-shadow .2s;position:relative;overflow:hidden}
+    .spin-btn:before{content:"";position:absolute;top:-40%;bottom:-40%;width:35%;left:-55%;transform:rotate(23deg);background:#ffffff45;transition:left .45s}
+    .spin-btn:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-2px);box-shadow:0 7px 0 #ad6d2b,0 12px 25px #ffbc4c45,inset 0 1px #fff8}
+    .spin-btn:hover:before{left:130%}
+    .spin-btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 #ad6d2b}
+    .spin-btn:disabled{cursor:wait;filter:saturate(.6);opacity:.83}
+    .spin-icon{font-size:17px;margin-right:8px;vertical-align:-1px}
+    .hint{font-size:10px;color:#77708f;text-align:center;margin-top:13px;letter-spacing:.15px}
+    .sidebar{display:flex;flex-direction:column;gap:16px}
+    .side-card{border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,#201b3bdd,#18142cdd);padding:19px 19px 17px;box-shadow:0 14px 40px #08061135}
+    .side-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .side-heading h2{font:700 13px 'Space Grotesk',sans-serif;margin:0;letter-spacing:.1px}
+    .side-heading span{font-size:10px;color:#8e87a7}
+    .prize-list{display:flex;flex-direction:column;gap:9px}
+    .prize{height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 11px;border-radius:11px;background:#ffffff06;border:1px solid #ffffff07}
+    .prize-left{display:flex;align-items:center;gap:9px;color:#c7c0d8;font-size:11px;font-weight:600}
+    .prize-icon{width:22px;height:22px;border-radius:7px;background:#ffffff0b;display:grid;place-items:center;font-size:12px}
+    .mult{font:700 12px 'Space Grotesk',sans-serif;color:var(--gold)}
+    .mult.pink{color:#ff77a5}.mult.green{color:#74e9bf}.mult.violet{color:#b29bff}.mult.muted{color:#b7afc9}
+    .history-card{flex:1;min-height:192px}
+    .history-list{display:flex;flex-direction:column;gap:8px}
+    .history-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#ffffff06;border-radius:10px;animation:fadeIn .3s ease}
+    .history-left{display:flex;align-items:center;gap:8px}
+    .history-emoji{font-size:14px}
+    .history-detail{color:#c6bfd7;font-size:10px;font-weight:600}
+    .history-time{color:#726b88;font-size:9px;margin-top:2px}
+    .history-win{font:700 11px 'Space Grotesk',sans-serif;color:var(--green)}
+    .history-win.loss{color:#a7a0b7}
+    .empty-history{text-align:center;padding:25px 5px;color:#7e7793;font-size:11px;line-height:1.6}
+    .empty-history b{display:block;font-size:20px;margin-bottom:4px;filter:grayscale(.4)}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:11px}
+    .stat{padding:10px;background:#100d2077;border-radius:10px}
+    .stat span{font-size:9px;color:#89829f;display:block;margin-bottom:4px;letter-spacing:.3px}
+    .stat b{font:700 13px 'Space Grotesk',sans-serif;color:#eee9f8}
+    .footer{max-width:1055px;margin:18px auto 0;display:flex;align-items:center;justify-content:space-between;color:#716b85;font-size:9px;letter-spacing:.25px}
+    .fair{display:flex;align-items:center;gap:6px;color:#8d86a3}.fair i{font-style:normal;color:var(--green);font-size:12px}
+    .toast{position:fixed;z-index:20;left:50%;top:20px;transform:translate(-50%,-130%);opacity:0;padding:13px 20px;border-radius:14px;background:#272142;border:1px solid #ffffff1b;box-shadow:0 15px 55px #080611aa;display:flex;align-items:center;gap:11px;transition:transform .4s cubic-bezier(.2,.8,.2,1),opacity .4s;min-width:240px;justify-content:center}
+    .toast.show{transform:translate(-50%,0);opacity:1}.toast .toast-icon{font-size:20px}.toast strong{font:700 14px 'Space Grotesk',sans-serif}.toast small{display:block;font:500 10px 'DM Sans',sans-serif;color:#a8a1ba;margin-top:2px}
+    .toast.big-win{border-color:#ffcf6788;box-shadow:0 0 45px #ffc95b2a,0 15px 55px #080611aa}
+    .modal-backdrop{position:fixed;inset:0;background:#080611bb;backdrop-filter:blur(7px);display:none;place-items:center;z-index:30;padding:20px}.modal-backdrop.open{display:grid}
+    .modal{width:min(420px,100%);border:1px solid #ffffff20;background:linear-gradient(145deg,#272143,#17132b);border-radius:22px;padding:25px;box-shadow:0 25px 90px #07050ecc;position:relative}
+    .modal-close{position:absolute;right:15px;top:13px;background:#ffffff0b;border:0;border-radius:9px;width:30px;height:30px;color:#c7bfd8;font-size:18px}
+    .modal h2{font:700 20px 'Space Grotesk',sans-serif;margin:0 0 8px}.modal p{font-size:12px;line-height:1.7;color:#aaa3bc;margin:0 0 15px}.modal .note{padding:12px;background:#ffffff07;border-radius:12px;color:#cfc8df;font-size:11px}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+    @media(max-width:850px){.app{padding:20px 20px 28px}.game-layout{grid-template-columns:minmax(0,1fr) 260px;gap:16px}.game-card{padding:23px 20px;min-height:535px}.wheel-stage{height:345px}.wheel-shell{width:min(305px,65vw);height:min(305px,65vw)}.wheel-lights i{transform:rotate(var(--a)) translateY(-143px)}.pointer{top:12px}}
+    @media(max-width:680px){.app{padding:15px 14px 25px}header{margin-bottom:20px}.brand{font-size:17px}.header-right{gap:8px}.sound-btn,.help-btn{height:36px;width:36px}.wallet{height:38px;padding:0 10px;font-size:12px}.hero{margin:3px 0 19px}.subtitle{font-size:11px}.game-layout{grid-template-columns:1fr;max-width:460px}.game-card{min-height:0;padding:19px 15px 19px;border-radius:20px}.game-top{padding:0 2px}.wheel-stage{height:min(80vw,340px);margin-top:4px}.wheel-shell{width:min(72vw,300px);height:min(72vw,300px);padding:9px}.wheel-lights i{transform:rotate(var(--a)) translateY(min(-34vw,-130px))}.pointer{top:2px}.hub{width:51px;height:51px}.control-area{gap:8px}.bet-control{height:50px}.bet-control button{height:36px;width:33px}.bet-value{min-width:62px}.spin-btn{min-width:145px;height:53px;padding:0 16px;font-size:13px}.hint{margin-top:10px}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:11px}.side-card{padding:15px 13px;border-radius:16px}.side-heading{margin-bottom:11px}.side-heading h2{font-size:12px}.prize-list{gap:6px}.prize{height:36px;padding:0 8px}.prize-left{font-size:10px;gap:6px}.prize-icon{width:20px;height:20px}.history-card{min-height:0}.stats{gap:6px}.stat{padding:8px}.footer{margin-top:13px;font-size:8px}}
+    @media(max-width:390px){.sidebar{grid-template-columns:1fr}.history-card{min-height:140px}.wheel-stage{height:300px}.wheel-shell{width:258px;height:258px}.wheel-lights i{transform:rotate(var(--a)) translateY(-121px)}.pointer{top:8px}.spin-btn{min-width:135px}.bet-control{gap:0}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand"><div class="brand-mark">✦</div><div>SPIN CLUB<small>THE DAILY GAME</small></div></div>
+      <div class="header-right">
+        <button class="help-btn" id="helpBtn" aria-label="How to play" title="How to play">?</button>
+        <button class="sound-btn" id="soundBtn" aria-label="Toggle sound" title="Toggle sound">♫</button>
+        <div class="wallet"><span class="coin">◆</span><span id="balance">1,000</span><span style="color:#c3a665;font-size:11px">COINS</span></div>
+      </div>
+    </header>
+    <section class="hero"><div class="eyebrow">A LITTLE LUCK GOES A LONG WAY</div><h1>Take a spin. <span>Win big.</span></h1><p class="subtitle">Place your bet, spin the wheel, and see where your luck lands.</p></section>
+    <main class="game-layout">
+      <section class="game-card" aria-label="Lucky wheel game">
+        <div class="game-top"><div class="game-label"><span class="live-dot"></span> LUCKY WHEEL <span style="color:#736c89;font-weight:500">/ CLASSIC</span></div><div class="round-pill">ROUND <span id="roundNo">01</span></div></div>
+        <div class="wheel-stage">
+          <div class="wheel-aura"></div>
+          <div class="pointer" aria-hidden="true"><svg viewBox="0 0 36 45"><path d="M18 43 2.8 7.5A5.2 5.2 0 0 1 7.6.3h20.8a5.2 5.2 0 0 1 4.8 7.2L18 43Z" fill="#ffda7c" stroke="#fff0bf" stroke-width="1.5"/><path d="m18 34-10.5-24h21L18 34Z" fill="#dd9a3e" opacity=".55"/></svg></div>
+          <div class="wheel-shell"><canvas id="wheel" width="800" height="800" aria-label="Prize wheel"></canvas><div class="wheel-lights" id="lights"></div><div class="hub">✦</div></div>
+        </div>
+        <div class="control-area">
+          <div class="bet-control" aria-label="Bet amount"><button id="minus" aria-label="Decrease bet">−</button><div class="bet-value"><small>YOUR BET</small><b><span id="bet">25</span> <span style="color:#b7a982;font-size:11px">◆</span></b></div><button id="plus" aria-label="Increase bet">+</button></div>
+          <button class="spin-btn" id="spin"><span class="spin-icon">✦</span> SPIN THE WHEEL</button>
+        </div>
+        <div class="hint">Press <b style="color:#b9b1cc">SPACE</b> to spin · Bet is deducted when you spin</div>
+      </section>
+      <aside class="sidebar">
+        <section class="side-card">
+          <div class="side-heading"><h2>Prize board</h2><span>8 chances</span></div>
+          <div class="prize-list" id="prizeList"></div>
+        </section>
+        <section class="side-card history-card">
+          <div class="side-heading"><h2>Recent spins</h2><span id="spinCount">0 spins</span></div>
+          <div class="history-list" id="historyList"><div class="empty-history"><b>🎡</b>Your story starts with a spin.</div></div>
+          <div class="stats"><div class="stat"><span>BEST WIN</span><b id="bestWin">—</b></div><div class="stat"><span>NET PROFIT</span><b id="netProfit">0</b></div></div>
+        </section>
+      </aside>
+    </main>
+    <footer class="footer"><span>JUST FOR FUN · NO PURCHASE NECESSARY</span><span class="fair"><i>◈</i> One spin. One chance. Good luck!</span></footer>
+  </div>
+  <div class="toast" id="toast"><span class="toast-icon" id="toastIcon">🎉</span><div><strong id="toastTitle">Nice!</strong><small id="toastText">You won some coins.</small></div></div>
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal"><button class="modal-close" id="modalClose" aria-label="Close">×</button><h2 id="modalTitle">How to play</h2><p>Choose your bet, then hit <b>Spin the wheel</b>. Your bet is taken from your balance and the wheel picks one of eight prizes.</p><div class="note">💰 Your prize is your bet multiplied by the number on the wheel. Land on <b>0×</b> and your bet is lost. Adjust your bet with + / −, or press <b>Space</b> to spin.</div></div></div>
+  <script>
+    (() => {
+      const prizes = [
+        {label:'No luck', mult:0, color:'#51416c', text:'#d6c9e8', icon:'☾', tone:'muted'},
+        {label:'Half back', mult:.5, color:'#bc547c', text:'#fff1f4', icon:'♡', tone:'pink'},
+        {label:'Double up', mult:2, color:'#5448a1', text:'#f1eaff', icon:'✦', tone:'violet'},
+        {label:'Half back', mult:.5, color:'#bc547c', text:'#fff1f4', icon:'♡', tone:'pink'},
+        {label:'Triple win', mult:3, color:'#378d78', text:'#eafff6', icon:'♧', tone:'green'},
+        {label:'No luck', mult:0, color:'#51416c', text:'#d6c9e8', icon:'☾', tone:'muted'},
+        {label:'Five times', mult:5, color:'#c78d36', text:'#fff7dd', icon:'★', tone:'gold'},
+        {label:'JACKPOT', mult:10, color:'#b94d69', text:'#fff0df', icon:'♛', tone:'pink'}
+      ];
+      const $ = id => document.getElementById(id);
+      const canvas = $('wheel'), ctx = canvas.getContext('2d');
+      let balance = Number(localStorage.getItem('luckyBalance')) || 1000;
+      let bet = 25, spinning = false, rotation = 0, round = 1, totalSpins = 0, net = 0, best = 0, soundOn = false, toastTimer;
+      const slice = Math.PI * 2 / prizes.length;
+      const format = n => Math.floor(n).toLocaleString('en-US');
+      function drawWheel(){
+        const c=canvas, x=400, y=400, r=392;
+        ctx.clearRect(0,0,800,800);
+        prizes.forEach((p,i)=>{
+          const start=-Math.PI/2+i*slice, end=start+slice;
+          ctx.beginPath();ctx.moveTo(x,y);ctx.arc(x,y,r,start,end);ctx.closePath();ctx.fillStyle=p.color;ctx.fill();
+          ctx.strokeStyle='#f9dda94d';ctx.lineWidth=3;ctx.stroke();
+          ctx.save();ctx.translate(x,y);ctx.rotate(start+slice/2);
+          ctx.textAlign='center';ctx.textBaseline='middle';
+          ctx.fillStyle=p.text;ctx.font='700 36px "DM Sans", sans-serif';ctx.fillText(p.mult===0?'0×':p.mult+'×',r*.68,0);
+          ctx.font='600 15px "DM Sans", sans-serif';ctx.fillStyle=p.text+'cc';ctx.fillText(p.label.toUpperCase(),r*.68,29);
+          ctx.restore();
+        });
+        for(let i=0;i<32;i++){
+          const a=-Math.PI/2+i*Math.PI/16;ctx.beginPath();ctx.arc(x+Math.cos(a)*r*.96,y+Math.sin(a)*r*.96,3.8,0,Math.PI*2);ctx.fillStyle=i%2?'#f9d879':'#fff3c6';ctx.fill();
+        }
+      }
+      function setup(){
+        drawWheel();canvas.style.transform=`rotate(${rotation}deg)`;$('lights').innerHTML=Array.from({length:24},(_,i)=>`<i style="--a:${i*15}deg"></i>`).join('');
+        $('prizeList').innerHTML=prizes.slice().reverse().map(p=>`<div class="prize"><div class="prize-left"><span class="prize-icon">${p.icon}</span>${p.label}</div><span class="mult ${p.tone}">${p.mult}×</span></div>`).join('');
+        $('balance').textContent=format(balance);updateBet();
+      }
+      function updateBet(){ $('bet').textContent=bet; $('minus').disabled=spinning||bet<=1; $('plus').disabled=spinning||bet>=Math.min(500,balance); $('spin').disabled=spinning||balance<bet; }
+      function sound(freq=420,duration=.08){if(!soundOn)return;try{const a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=freq;g.gain.setValueAtTime(.035,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+duration);o.start();o.stop(a.currentTime+duration)}catch(e){}}
+      function showToast(title,text,icon='🎉',big=false){clearTimeout(toastTimer);$('toastTitle').textContent=title;$('toastText').textContent=text;$('toastIcon').textContent=icon;$('toast').classList.toggle('big-win',big);$('toast').classList.add('show');toastTimer=setTimeout(()=>$('toast').classList.remove('show'),3500)}
+      function addHistory(prize, payout, wager){
+        const list=$('historyList');if(totalSpins===1)list.innerHTML='';
+        const row=document.createElement('div');row.className='history-item';
+        const result=payout>0?`+${format(payout)}`:`−${format(wager)}`;
+        row.innerHTML=`<div class="history-left"><span class="history-emoji">${prize.icon}</span><div><div class="history-detail">${prize.mult}× · ${format(wager)} bet</div><div class="history-time">Just now</div></div></div><span class="history-win ${payout===0?'loss':''}">${result}</span>`;
+        list.prepend(row);while(list.children.length>4)list.removeChild(list.lastChild);
+        $('spinCount').textContent=`${totalSpins} ${totalSpins===1?'spin':'spins'}`;
+      }
+      function spin(){
+        if(spinning)return;
+        if(balance<bet){showToast('Not enough coins','Lower your bet to keep playing.','🪙');return}
+        spinning=true;updateBet();sound(260,.16);
+        const wager=bet;balance-=wager;net-=wager;localStorage.setItem('luckyBalance',balance);$('balance').textContent=format(balance);
+        const index=Math.floor(Math.random()*prizes.length), prize=prizes[index];
+        const center=(index+.5)*360/prizes.length;
+        const desired=((360-center)%360);
+        const normalized=((rotation%360)+360)%360;
+        let delta=(desired-normalized+360)%360;
+        if(delta<2)delta+=360;
+        rotation+=360*6+delta;
+        canvas.style.transform=`rotate(${rotation}deg)`;
+        let ticks=0;const ticker=setInterval(()=>{sound(170+ticks*8,.025);ticks++;if(ticks>18)clearInterval(ticker)},220);
+        setTimeout(()=>{
+          spinning=false;totalSpins++;round++;$('roundNo').textContent=String(round).padStart(2,'0');
+          const payout=Math.floor(wager*prize.mult);balance+=payout;net+=payout;best=Math.max(best,payout);
+          localStorage.setItem('luckyBalance',balance);$('balance').textContent=format(balance);$('netProfit').textContent=(net>0?'+':'')+format(net);$('netProfit').style.color=net>=0?'#73e7bd':'#ff829c';$('bestWin').textContent=best?format(best):'—';
+          addHistory(prize,payout,wager);updateBet();
+          if(payout>=wager*3){showToast(prize.mult===10?'JACKPOT!':'Big win!',`You won ${format(payout)} coins!`,prize.icon,true);sound(740,.3)}
+          else if(payout>wager){showToast('You won!',`${format(payout)} coins · ${prize.mult}× your bet`,prize.icon);sound(620,.2)}
+          else if(payout){showToast('Not bad!',`${format(payout)} coins back`,prize.icon);sound(520,.15)}
+          else{showToast('Better luck next time','The wheel had other plans.','☾');sound(180,.18)}
+        },5100);
+      }
+      $('minus').addEventListener('click',()=>{bet=Math.max(1,bet-5);updateBet();sound(350)});
+      $('plus').addEventListener('click',()=>{bet=Math.min(500,balance,bet+5);updateBet();sound(480)});
+      $('spin').addEventListener('click',spin);
+      $('soundBtn').addEventListener('click',()=>{soundOn=!soundOn;$('soundBtn').textContent=soundOn?'♫':'♩';$('soundBtn').style.color=soundOn?'var(--gold)':'';sound(560)});
+      $('helpBtn').addEventListener('click',()=>$('modalBackdrop').classList.add('open'));
+      $('modalClose').addEventListener('click',()=>$('modalBackdrop').classList.remove('open'));
+      $('modalBackdrop').addEventListener('click',e=>{if(e.target===$('modalBackdrop'))$('modalBackdrop').classList.remove('open')});
+      window.addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat&&!$('modalBackdrop').classList.contains('open')){e.preventDefault();spin()}if(e.key==='Escape')$('modalBackdrop').classList.remove('open')});
+      setup();
+    })();
+  </script>
+</body>
+</html>
