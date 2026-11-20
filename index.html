@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wilds Hunter</title>
+<style>
+:root{--ink:#17201b;--cream:#efe8d2;--gold:#dcae50;--red:#d45a3d}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101713;font-family:Georgia,'Times New Roman',serif;user-select:none}
+canvas{display:block;width:100%;height:100%;cursor:crosshair}
+#hud{position:absolute;inset:0;pointer-events:none;color:#fff;text-shadow:0 2px 3px #000}
+#top{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:min(620px,55vw);text-align:center}
+#zone{font-size:12px;letter-spacing:5px;color:#e4cf9c;text-transform:uppercase}
+#bossName{margin-top:3px;font-size:18px;letter-spacing:2px;text-shadow:0 2px 5px #000}
+.bar{height:12px;margin-top:6px;background:#1a1b18;border:2px solid #080a08;box-shadow:0 2px 6px #000;border-radius:2px;overflow:hidden}
+#bossHp{height:100%;width:100%;background:linear-gradient(90deg,#8f3428,#d85b43);transition:width .15s}
+#bottom{position:absolute;left:28px;bottom:22px;width:270px}
+#playerName{font-size:16px;margin-bottom:5px;color:#f4e4b2}.healthrow{display:flex;align-items:center;gap:9px}
+#healthShell{height:18px;flex:1;background:#181c17;border:2px solid #080a08;transform:skewX(-10deg);overflow:hidden}
+#health{height:100%;width:100%;background:linear-gradient(90deg,#c63b34,#e99a67);transition:width .15s}
+#hpText{font:11px monospace;min-width:44px}.stat{display:flex;margin-top:9px;gap:7px}.chip{padding:5px 9px;background:rgba(15,20,16,.78);border:1px solid rgba(234,218,170,.35);font:11px monospace}
+#staminaShell{position:absolute;left:28px;bottom:7px;width:230px;height:5px;background:#111;border:1px solid #090909}.stamina{height:100%;width:100%;background:#d1c679}
+#objective{position:absolute;right:25px;top:24px;width:210px;text-align:right;text-transform:uppercase;font-size:11px;letter-spacing:2px;color:#d7cead}
+#objective b{display:block;margin-top:5px;font-size:14px;color:#fff}
+#crosshair{position:absolute;width:12px;height:12px;left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,.75);border-radius:50%;opacity:.7}
+#crosshair:before,#crosshair:after{content:'';position:absolute;background:#fff}.crosshair:before{width:18px;height:1px;left:-4px;top:5px}#crosshair:after{height:18px;width:1px;left:5px;top:-4px}
+#toast{position:absolute;left:50%;top:24%;transform:translate(-50%,-50%);font-size:25px;letter-spacing:4px;opacity:0;transition:.35s;text-align:center}
+#toast.show{opacity:1}#toast small{display:block;font-size:11px;letter-spacing:2px;color:#dccb91;margin-top:8px}
+#start,#gameover{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,rgba(43,66,49,.25),rgba(5,8,7,.88));text-align:center;color:#eee8d3}.panel{width:min(580px,88vw);padding:34px;border:1px solid rgba(220,205,159,.35);background:rgba(12,18,14,.86);box-shadow:0 20px 80px #000}.kicker{font-size:11px;letter-spacing:7px;color:#b8a66d;text-transform:uppercase}h1{font-size:54px;margin:12px 0 4px;font-weight:normal;letter-spacing:3px}h1 em{display:block;font-size:15px;letter-spacing:8px;color:#cf9b55;margin-top:8px}.panel p{color:#bab49f;line-height:1.7;font-size:14px}button{pointer-events:auto;margin-top:18px;border:1px solid #beaa70;background:#ae9149;color:#17140d;padding:12px 30px;font:14px Georgia;letter-spacing:3px;text-transform:uppercase;cursor:pointer}button:hover{background:#d2b963}.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px;font:11px monospace;color:#d8d2b9}.key{color:#e8c66f}#gameover{display:none}.hidden{display:none!important}
+.damage{position:absolute;color:#fff1bb;font:bold 19px monospace;text-shadow:1px 2px 2px #000;transform:translate(-50%,-50%);animation:float .8s forwards}@keyframes float{to{transform:translate(-50%,-90px);opacity:0}}
+#vignette{position:absolute;inset:0;box-shadow:inset 0 0 120px rgba(0,0,0,.75);pointer-events:none}#hitFlash{position:absolute;inset:0;background:rgba(180,25,18,.18);opacity:0;transition:.12s}
+</style>
+</head><body>
+<canvas id="game"></canvas><div id="vignette"></div><div id="hitFlash"></div>
+<div id="hud"><div id="top"><div id="zone">Ancient Forest · Area 04</div><div id="bossName">EMBER MAW</div><div class="bar"><div id="bossHp"></div></div></div>
+<div id="objective">QUEST OBJECTIVE<b>Hunt the Ember Maw</b></div><div id="crosshair"></div>
+<div id="toast"></div><div id="bottom"><div id="playerName">IRONCLAD HUNTER</div><div class="healthrow"><div id="healthShell"><div id="health"></div></div><div id="hpText">150 / 150</div></div><div class="stat"><div class="chip">⚔ <span id="atk">42</span></div><div class="chip">◆ <span id="potion">3</span></div><div class="chip">◈ <span id="kills">0</span></div></div></div><div id="staminaShell"><div class="stamina"></div></div></div>
+<div id="start"><div class="panel"><div class="kicker">A Frontier Hunt</div><h1>EMBER MAW<em>AN ANCIENT FOREST TALE</em></h1><p>The great beast has awakened beneath the cedar crowns. Hunt it through the ruins, time your attacks, and carve its hide before the forest claims you.</p><div class="controls"><div><span class="key">WASD</span><br>Move</div><div><span class="key">MOUSE</span><br>Aim / Attack</div><div><span class="key">SPACE</span><br>Dodge</div><div><span class="key">Q</span><br>Heavy attack</div><div><span class="key">SHIFT</span><br>Sprint</div><div><span class="key">R</span><br>Use potion</div></div><button id="begin">Begin Hunt</button></div></div>
+<div id="gameover"><div class="panel"><div class="kicker" id="endKicker">Hunt Ended</div><h1 id="endTitle">The forest prevails</h1><p id="endText"></p><button id="again">Return to Camp</button></div></div>
+<script>
+const c=document.getElementById('game'),x=c.getContext('2d');let W,H,DPR;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;c.width=W*DPR;c.height=H*DPR;c.style.width=W+'px';c.style.height=H+'px';x.setTransform(DPR,0,0,DPR,0,0)}resize();addEventListener('resize',resize);
+const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+let playing=false,keys={},mouse={x:W/2,y:H/2,down:false},camera={x:0,y:0,shake:0};
+const player={x:0,y:150,r:16,hp:150,maxHp:150,stamina:100,atk:42,potions:3,angle:0,cd:0,heavy:0,dodge:0,inv:0,trail:[]};
+let boss={x:260,y:-40,r:38,hp:750,maxHp:750,angle:0,cd:2,charge:-1,hit:0,phase:1,dead:false};
+let trees=[],rocks=[],particles=[],slashes=[],projectiles=[],loot=[];
+for(let i=0;i<260;i++){let a=rnd(0,Math.PI*2),d=rnd(260,1500);trees.push({x:Math.cos(a)*d,y:Math.sin(a)*d,s:rnd(.7,1.8),h:rnd(80,150),shade:rnd(0,1)})}
+for(let i=0;i<180;i++){let a=rnd(0,Math.PI*2),d=rnd(170,1300);rocks.push({x:Math.cos(a)*d,y:Math.sin(a)*d,s:rnd(8,28)}}
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key===' '&&playing){e.prevent();dodge()}});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+addEventListener('mousemove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});addEventListener('mousedown',()=>mouse.down=true);addEventListener('mouseup',()=>mouse.down=false);
+function world(mx,my){return {x:mx-W/2+camera.x,y:my-H/2+camera.y}}
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function dodge(){if(player.stamina>=28&&player.dodge<=0&&player.inv<=0){player.dodge=.45;player.inv=.55;player.stamina-=28}}
+function attack(heavy=false){if(!playing||player.cd>0)return;const cost=heavy?18:0;if(heavy&&player.stamina<cost)return;if(heavy)player.stamina-=cost;player.cd=heavy?.62:.28;player.heavy=heavy?.16:0;
+ const range=heavy?82:66,damage=heavy?75:32;slashes.push({x:player.x,y:player.y,a:player.angle,r:range,life:.16,heavy});
+ if(dist(player,boss)<range+boss.r){const ang=Math.atan2(boss.y-player.y,boss.x-player.x),gap=Math.abs(((ang-player.angle+Math.PI*3)%(Math.PI*2))-Math.PI);if(gap<1.45||heavy){boss.hp-=damage;boss.hit=.12;camera.shake=heavy?9:4;damageText(boss.x,boss.y,damage);if(boss.hp<=0)win()}}}
+function damageText(tx,ty,n){const el=document.createElement('div');el.className='damage';el.style.left=(tx-camera.x+W/2)+'px';el.style.top=(ty-camera.y+H/2)+'px';el.textContent=n;document.body.appendChild(el);setTimeout(()=>el.remove(),850)}
+addEventListener('keydown',e=>{if(e.key.toLowerCase()==='q')attack(true);if(e.key.toLowerCase()==='r')potion()});addEventListener('mousedown',()=>{if(playing)attack(false)});
+function potion(){if(playing&&player.potions>0&&player.hp<player.maxHp){player.potions--;player.hp=Math.min(player.maxHp,player.hp+55)}}
+function toast(t,s=''){const e=document.getElementById('toast');e.innerHTML=t+(s?'<small>'+s+'</small>':'');e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1700)}
+function win(){boss.dead=true;playing=false;loot.push({x:boss.x,y:boss.y,vx:rnd(-2,2),vy:rnd(-2,2),life:1});setTimeout(()=>end(true),900)}
+function end(win){document.getElementById('gameover').style.display='flex';document.getElementById('endKicker').textContent=win?'Quest Complete':'Hunt Ended';document.getElementById('endTitle').textContent=win?'Ember Maw vanquished':'The forest prevails';document.getElementById('endText').textContent=win?'The ancient grove is quiet once more. Your iron blade has claimed the beast, and the hunter walks on.':'You have fallen in the Ancient Forest. Rest, sharpen your weapon, and return stronger.'}
+function start(){playing=true;document.getElementById('start').classList.add('hidden');document.getElementById('gameover').style.display='none';toast('Hunt commenced','EMBER MAW · ANCIENT FOREST');}
+document.getElementById('begin').onclick=start;document.getElementById('again').onclick=()=>location.reload();
+function update(dt){if(!playing)return;dt=Math.min(dt,.033);let dx=(keys.d?1:0)-(keys.a?1:0),dy=(keys.s?1:0)-(keys.w?1:0),len=Math.hypot(dx,dy);if(len){dx/=len;dy/=len;let sp=(keys.shift&&player.stamina>0?210:150);if(keys.shift)player.stamina-=28*dt;player.x+=dx*sp*dt*(player.dodge?1.8:1);player.y+=dy*sp*dt*(player.dodge?1.8:1)}if(!keys.shift)player.stamina=Math.min(100,player.stamina+19*dt);player.stamina=Math.max(0,player.stamina);player.cd-=dt;player.heavy-=dt;player.dodge-=dt;player.inv-=dt;
+const mw=world(mouse.x,mouse.y);player.angle=Math.atan2(mw.y-player.y,mw.x-player.x);
+ if(!boss.dead){boss.hit-=dt;boss.phase=boss.hp/boss.maxHp<.5?2:1;boss.cd-=dt;const bd=Math.hypot(player.x-boss.x,player.y-boss.y),ba=Math.atan2(player.y-boss.y,player.x-boss.x);boss.angle=ba;if(boss.cd<=0){if(boss.phase===2&&Math.random()<.35){boss.cd=rnd(2.2,3);boss.charge=.8;toast('The Maw charges','DODGE NOW')}else{boss.cd=rnd(1.25,2.1);for(let i=-1;i<=1;i++){const a=ba+i*.18;projectiles.push({x:boss.x,y:boss.y,vx:Math.cos(a)*210,vy:Math.sin(a)*210,r:8,life:3})}}}
+  if(boss.charge>0){boss.charge-=dt;boss.x+=Math.cos(ba)*330*dt*(boss.charge<.55?1:0.25);boss.y+=Math.sin(ba)*330*dt*(boss.charge<.55?1:0.25)}else if(bd>105){boss.x+=Math.cos(ba)*((boss.phase===2?58:42))*dt;boss.y+=Math.sin(ba)*((boss.phase===2?58:42))*dt}
+  if(bd<boss.r+player.r+10&&player.inv<=0){hitPlayer(16)} }
+ for(let i=projectiles.length-1;i>=0;i--){let p=projectiles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(dist(p,player)<p.r+player.r&&player.inv<=0){hitPlayer(12);projectiles.splice(i,1)}else if(p.life<0)projectiles.splice(i,1)}
+ slashes.forEach(s=>s.life-=dt);slashes=slashes.filter(s=>s.life>0);camera.x+=(player.x-camera.x)*.09;camera.y+=(player.y-camera.y)*.09;camera.shake*=.82;
+ document.getElementById('bossHp').style.width=(boss.hp/boss.maxHp*100)+'%';document.getElementById('health').style.width=(player.hp/player.maxHp*100)+'%';document.getElementById('hpText').textContent=Math.ceil(player.hp)+' / '+player.maxHp;document.querySelector('.stamina').style.width=player.stamina+'%';document.getElementById('potion').textContent=player.potions;}
+function hitPlayer(n){if(!playing)return;player.hp-=n;player.inv=.7;camera.shake=12;document.getElementById('hitFlash').style.opacity=1;setTimeout(()=>document.getElementById('hitFlash').style.opacity=0,100);if(player.hp<=0){player.hp=0;playing=false;setTimeout(()=>end(false),500)}}
+function draw(){let sx=(Math.random()-.5)*camera.shake,sy=(Math.random()-.5)*camera.shake;x.save();x.translate(W/2-camera.x+sx,H/2-camera.y+sy);
+ // ground
+ x.fillStyle='#26392b';x.fillRect(camera.x-W/2-100,camera.y-H/2-100,W+200,H+200);x.fillStyle='#314631';for(let i=-3;i<8;i++){for(let j=-3;j<8;j++){let gx=Math.floor((camera.x-W/2)/260)*260+i*260,gy=Math.floor((camera.y-H/2)/260)*260+j*260;x.beginPath();x.ellipse(gx+rnd(-20,20),gy+rnd(-20,20),rnd(40,90),rnd(25,70),rnd(0,6),0,Math.PI*2);x.fill()}}
+ // ruins
+ x.strokeStyle='#1e3025';x.lineWidth=5;for(let i=-800;i<800;i+=260){x.beginPath();x.moveTo(i,-600);x.lineTo(i+20,600);x.stroke()} 
+ // shadow decals
+ rocks.forEach(r=>{x.fillStyle='#1d2a20';x.beginPath();x.ellipse(r.x+5,r.y+7,r.s,r.s*.55,0,0,Math.PI*2);x.fill();x.fillStyle='#626457';x.beginPath();x.moveTo(r.x-r.s*.8,r.y);x.lineTo(r.x-r.s*.3,r.y-r.s*.7);x.lineTo(r.x+r.s*.8,r.y-r.s*.1);x.lineTo(r.x+r.s*.4,r.y+r.s*.5);x.closePath();x.fill()});
+ trees.sort((a,b)=>a.y-b.y).forEach(t=>drawTree(t));
+ // boss
+ if(!boss.dead)drawBoss();else{loot.forEach(l=>{x.fillStyle='#d6ae56';x.beginPath();x.arc(l.x,l.y,8,0,7);x.fill()})}
+ slashes.forEach(s=>{x.save();x.translate(s.x,s.y);x.rotate(s.a);x.strokeStyle=s.heavy?'rgba(255,224,128,.9)':'rgba(255,245,210,.85)';x.lineWidth=s.heavy?8:5;x.beginPath();x.arc(0,0,s.r,-1.1,1.1);x.stroke();x.restore()});
+ projectiles.forEach(p=>{x.fillStyle='rgba(70,20,12,.3)';x.beginPath();x.arc(p.x+5,p.y+7,p.r*1.2,0,7);x.fill();x.fillStyle='#ef7046';x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill();x.fillStyle='#7a281b';x.beginPath();x.arc(p.x,p.y,p.r*.45,0,7);x.fill()});
+ drawPlayer();x.restore();requestAnimationFrame(loop)}
+function drawTree(t){x.fillStyle='rgba(5,12,8,.32)';x.beginPath();x.ellipse(t.x+12,t.y+10,26*t.s,10*t.s,.2,0,7);x.fill();x.fillStyle='#433e2d';x.fillRect(t.x-5*t.s,t.y-10*t.s,10*t.s,18*t.s);x.fillStyle=t.shade>.5?'#1b3b25':'#23472b';for(let k=0;k<3;k++){x.beginPath();x.arc(t.x+Math.cos(k*2.1)*18*t.s,t.y-28*t.s-Math.abs(k-1)*8,rnd(28,38)*t.s,0,7);x.fill()} }
+function drawPlayer(){x.save();x.translate(player.x,player.y);x.rotate(player.angle);if(player.inv>0&&Math.floor(player.inv*12)%2)x.globalAlpha=.55;x.fillStyle='rgba(0,0,0,.35)';x.beginPath();x.ellipse(5,12,20,8,.2,0,7);x.fill();x.fillStyle='#d2bfa1';x.beginPath();x.arc(0,0,14,0,7);x.fill();x.fillStyle='#3a4d40';x.beginPath();x.moveTo(-13,-10);x.lineTo(8,-11);x.lineTo(14,9);x.lineTo(-11,12);x.closePath();x.fill();x.fillStyle='#71806c';x.fillRect(-12,-14,24,7);x.strokeStyle='#b6aa79';x.lineWidth=4;x.beginPath();x.moveTo(8,-3);x.lineTo(39,-3);x.stroke();x.restore()}
+function drawBoss(){x.save();x.translate(boss.x,boss.y);x.rotate(boss.angle);if(boss.hit>0)x.shadowBlur=18,x.shadowColor='#ff7a50';x.fillStyle='rgba(0,0,0,.38)';x.beginPath();x.ellipse(8,28,50,15,.1,0,7);x.fill();x.fillStyle='#2b2923';x.beginPath();x.ellipse(0,0,42,33,0,0,7);x.fill();x.fillStyle='#4b4536';x.beginPath();x.ellipse(-9,-9,35,24,0,0,7);x.fill();x.fillStyle='#171815';x.beginPath();x.moveTo(-20,-20);x.lineTo(-32,-48);x.lineTo(-10,-38);x.closePath();x.fill();x.beginPath();x.moveTo(20,-20);x.lineTo(32,-48);x.lineTo(10,-38);x.closePath();x.fill();x.fillStyle='#9a5a33';x.beginPath();x.moveTo(30,-8);x.lineTo(63,-16);x.lineTo(48,2);x.closePath();x.fill();x.beginPath();x.moveTo(28,5);x.lineTo(58,16);x.lineTo(42,21);x.closePath();x.fill();x.fillStyle='#c9ae72';x.beginPath();x.moveTo(34,-11);x.lineTo(52,-13);x.lineTo(44,-7);x.closePath();x.fill();x.fillStyle='#dbbd63';x.beginPath();x.moveTo(20,-17);x.lineTo(31,-23);x.lineTo(28,-14);x.closePath();x.fill();x.fillStyle='#b9a45c';x.beginPath();x.moveTo(-35,8);x.lineTo(-58,18);x.lineTo(-38,25);x.closePath();x.fill();x.fillStyle='#f05a36';x.fillRect(19,-5,5,4);x.fillRect(19,5,5,4);x.restore()}
+let last=performance.now();function loop(t){let dt=(t-last)/1000;last=t;update(dt);draw()}requestAnimationFrame(loop);
+</script>
+</body></html>
