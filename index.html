@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101513">
+  <title>Dead Signal — Zombie Survival</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="game-shell" id="gameShell">
+    <canvas id="gameCanvas" aria-label="Top-down zombie survival game"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Dead Signal home">
+        <span class="brand-mark"><i></i><i></i><i></i></span>
+        <span>DEAD<span class="brand-accent">SIGNAL</span></span>
+      </a>
+      <div class="mission-tag"><span class="live-dot"></span><span>FIELD OPERATION</span><b>NO. 07</b></div>
+      <button class="icon-button sound-toggle" id="soundButton" aria-label="Toggle sound" title="Sound on/off"><span class="sound-icon">♪</span></button>
+    </header>
+
+    <section class="hud" id="hud" aria-live="polite">
+      <div class="hud-left">
+        <div class="survivor-card">
+          <div class="portrait"><span>R</span><i></i></div>
+          <div class="survivor-info"><span class="eyebrow">SURVIVOR</span><strong>RANGER <small>09</small></strong></div>
+          <span class="status-pill">ALIVE</span>
+        </div>
+        <div class="vitals">
+          <div class="vital-row"><span class="vital-icon heart">♥</span><div class="vital-track"><div class="vital-fill health-fill" id="healthFill"></div></div><b id="healthText">100</b></div>
+          <div class="vital-row"><span class="vital-icon bolt">ϟ</span><div class="vital-track"><div class="vital-fill stamina-fill" id="staminaFill"></div></div><b id="staminaText">100</b></div>
+        </div>
+      </div>
+      <div class="wave-card"><span class="eyebrow">CURRENT THREAT</span><div class="wave-number"><span>WAVE</span><strong id="waveNumber">01</strong></div><div class="wave-progress"><span id="waveProgress"></span></div><span class="wave-meta" id="waveMeta">SCANNING FOR HOSTILES</span></div>
+      <div class="hud-right">
+        <div class="clock-card"><span class="eyebrow">LOCAL TIME</span><strong id="clockText">23:48:16</strong><span class="coords">SECTOR 04 <i>•</i> GRID 11-K</span></div>
+        <div class="minimap-wrap"><div class="map-label">AREA SCAN <span>● LIVE</span></div><canvas id="minimap" width="144" height="104"></canvas></div>
+      </div>
+      <div class="crosshair-hint" id="crosshairHint"><span>+</span> AIM TO ENGAGE</div>
+    </section>
+
+    <section class="weapon-panel" id="weaponPanel">
+      <div class="weapon-art"><div class="weapon-silhouette"><i></i><b></b><em></em></div><span>MK18</span></div>
+      <div class="weapon-details"><span class="eyebrow">PRIMARY WEAPON</span><strong>CARBINE <small>5.56</small></strong><div class="ammo-row"><b id="ammoClip">30</b><span>/</span><span id="ammoReserve">120</span><span class="ammo-label">ROUNDS</span></div></div>
+      <div class="weapon-state"><span class="weapon-dot"></span><span id="weaponState">READY</span></div>
+      <div class="reload-progress" id="reloadProgress"><i></i></div>
+    </section>
+
+    <div class="objective" id="objective"><span class="objective-icon">◎</span><div><span class="eyebrow">OBJECTIVE</span><strong>Survive the night</strong></div><span class="objective-count" id="killCount">00 <small>KILLS</small></span></div>
+
+    <div class="toast" id="toast"><span class="toast-icon">!</span><span id="toastText">HOSTILES INBOUND</span></div>
+
+    <section class="screen screen-start" id="startScreen">
+      <div class="start-backdrop"></div>
+      <div class="start-content">
+        <div class="season-tag"><span class="live-dot"></span> OUTBREAK PROTOCOL <i>—</i> 01 / 04</div>
+        <h1>THE NIGHT<br><span>ISN'T</span> OVER.</h1>
+        <p class="lead">The city went dark. You didn't.</p>
+        <div class="start-divider"><span></span><i>01</i><span></span></div>
+        <div class="briefing"><span class="eyebrow">MISSION BRIEFING</span><p>Hold your ground. Clear the infected. Make it to sunrise.</p></div>
+        <button class="primary-button" id="startButton"><span>DEPLOY</span><b>→</b></button>
+        <div class="best-score">PERSONAL BEST <strong id="bestScore">—</strong><span> KILLS</span></div>
+      </div>
+      <div class="start-footer"><span>BLACKRIDGE CITY <i>•</i> 04:17 UNTIL DAWN</span><span>CLASSIFIED <b>▮▮▮</b></span></div>
+      <div class="big-watermark">07</div>
+    </section>
+
+    <section class="screen screen-pause hidden" id="pauseScreen">
+      <div class="modal-card"><span class="eyebrow">FIELD OPERATION NO. 07</span><h2>PAUSED<span>.</span></h2><p>The dead can wait. For a moment.</p><button class="primary-button" id="resumeButton"><span>BACK TO IT</span><b>→</b></button><div class="pause-shortcut">PRESS <kbd>ESC</kbd> TO RESUME</div></div>
+    </section>
+
+    <section class="screen screen-end hidden" id="endScreen">
+      <div class="modal-card"><span class="eyebrow" id="endEyebrow">SIGNAL LOST</span><h2 id="endTitle">YOU'RE<br>STILL HERE<span>?</span></h2><p id="endCopy">The city takes another one.</p><div class="run-stats"><div><span class="eyebrow">WAVE REACHED</span><strong id="finalWave">01</strong></div><div><span class="eyebrow">INFECTED CLEARED</span><strong id="finalKills">00</strong></div></div><button class="primary-button" id="retryButton"><span>RUN IT BACK</span><b>↻</b></button><div class="pause-shortcut">PRESS <kbd>ENTER</kbd> TO REDEPLOY</div></div>
+    </section>
+
+    <footer class="bottom-hints" id="bottomHints"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> <i>MOVE</i></span><span><kbd>↖</kbd> <i>AIM</i></span><span><kbd>CLICK</kbd> <i>FIRE</i></span><span><kbd>R</kbd> <i>RELOAD</i></span><span><kbd>SHIFT</kbd> <i>DASH</i></span><span><kbd>ESC</kbd> <i>PAUSE</i></span></footer>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
