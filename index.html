@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Jungle Adventure</title>
+  <style>
+    :root { --ink:#153d2d; --cream:#fff8dc; --gold:#ffc83d; --green:#1d9d62; }
+    * { box-sizing:border-box; }
+    html,body { margin:0; height:100%; overflow:hidden; background:#102d27; font-family:"Trebuchet MS",system-ui,sans-serif; }
+    canvas { display:block; width:100%; height:100%; }
+    #hud { position:fixed; inset:18px 22px auto 22px; height:56px; display:flex; align-items:flex-start; justify-content:space-between; pointer-events:none; z-index:3; }
+    .pill { height:46px; border-radius:24px; background:rgba(255,248,220,.94); color:var(--ink); box-shadow:0 5px 0 rgba(21,61,45,.16),0 8px 20px rgba(0,0,0,.12); display:flex; align-items:center; gap:9px; padding:0 17px; font-weight:900; font-size:18px; }
+    .heart { color:#ef5a50; font-size:23px; letter-spacing:2px; }
+    .gem { width:26px; height:26px; border-radius:50% 50% 50% 8%; background:var(--gold); transform:rotate(-45deg); box-shadow:inset 4px 4px 0 rgba(255,255,255,.35); }
+    .gem:after { content:""; display:block; width:8px; height:8px; margin:5px 0 0 5px; border:2px solid rgba(255,255,255,.6); }
+    #level { position:fixed; left:50%; transform:translateX(-50%); top:20px; z-index:3; color:white; text-shadow:0 3px 0 #15533d,0 5px 12px rgba(0,0,0,.3); font-size:18px; font-weight:900; pointer-events:none; }
+    #overlay { position:fixed; inset:0; z-index:5; display:grid; place-items:center; background:linear-gradient(rgba(19,73,55,.12),rgba(19,73,55,.48)); }
+    #overlay.hidden { display:none; }
+    .card { width:min(480px, calc(100vw - 32px)); text-align:center; border-radius:28px; background:rgba(255,248,220,.96); padding:28px 34px 24px; color:var(--ink); box-shadow:0 12px 0 rgba(21,61,45,.24),0 24px 70px rgba(0,0,0,.28); }
+    .card h1 { margin:0; font-size:48px; line-height:.95; letter-spacing:-2px; color:#176c46; text-shadow:0 3px 0 #a9d56e; }
+    .card p { margin:12px 0 18px; font-weight:700; opacity:.78; }
+    button { border:0; border-radius:18px; background:#f4a62a; color:#fff; padding:14px 26px; font:900 20px inherit; cursor:pointer; box-shadow:0 6px 0 #c56c20; }
+    button:active { transform:translateY(4px); box-shadow:0 2px 0 #c56c20; }
+    #controls { position:fixed; z-index:4; inset:auto 18px 18px; display:flex; justify-content:space-between; pointer-events:none; }
+    .move, .jump { pointer-events:auto; width:72px; height:72px; border:3px solid rgba(255,255,255,.7); border-radius:50%; background:rgba(21,61,45,.38); color:white; display:grid; place-items:center; font-size:32px; user-select:none; touch-action:none; backdrop-filter:blur(4px); }
+    .jump { width:82px; height:82px; background:rgba(244,166,42,.75); }
+    #controls .left { display:flex; gap:12px; }
+    @media (min-width:800px) { #controls { opacity:0.18; } }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="hud">
+    <div class="pill"><span class="heart" id="health">♥♥♥</span></div>
+    <div class="pill"><span class="gem"></span><span id="count">0 / 12</span></div>
+  </div>
+  <div id="level">TEMPLE TRAIL</div>
+  <div id="overlay">
+    <div class="card">
+      <h1 id="title">Jungle Adventure</h1>
+      <p id="subtitle">Explore the temple trail. Collect 12 golden gems and reach the ancient gate.</p>
+      <button id="start">START ADVENTURE</button>
+    </div>
+  </div>
+  <div id="controls">
+    <div class="left"><div class="move" id="left">‹</div><div class="move" id="right">›</div></div>
+    <div class="jump" id="jump">▲</div>
+  </div>
+<script>
+(() => {
+const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
+const overlay=document.getElementById('overlay'), title=document.getElementById('title'), subtitle=document.getElementById('subtitle'), start=document.getElementById('start');
+let W,H,DPR,scale,shake=0,started=false,won=false,keys={};
+const world={w:3600,h:900};
+let cam=0,health=3,gemCount=0,invincible=0;
+const player={x:120,y:650,w:42,h:58,vx:0,vy:0,onGround:false,facing:1,checkpointX:120,checkpointY:650,anim:0};
+const platforms=[
+  {x:-100,y:760,w:650,h:180},{x:620,y:760,w:520,h:180},{x:1240,y:760,w:430,h:180},{x:1770,y:760,w:510,h:180},{x:2380,y:760,w:1220,h:180},
+  {x:430,y:610,w:150,h:24},{x:700,y:520,w:170,h:24},{x:1040,y:600,w:180,h:24},{x:1280,y:520,w:150,h:24},{x:1510,y:430,w:160,h:24},{x:1810,y:570,w:170,h:24},{x:2100,y:500,w:150,h:24},{x:2310,y:600,w:180,h:24},{x:2600,y:490,w:170,h:24},{x:2920,y:590,w:170,h:24}
+];
+const gems=[{x:470,y:565},{x:750,y:475},{x:845,y:475},{x:1100,y:555},{x:1330,y:475},{x:1570,y:385},{x:1870,y:525},{x:2150,y:455},{x:2370,y:555},{x:2660,y:445},{x:2740,y:445},{x:2980,y:545}].map(g=>({...g,taken:false,phase:Math.random()*6}));
+const enemies=[{x:680,y:720,w:48,h:40,min:620,max:1120,vx:1.1,dir:1},{x:1430,y:720,w:48,h:40,min:1240,max:1640,vx:.9,dir:1},{x:1900,y:720,w:48,h:40,min:1770,max:2250,vx:1.2,dir:-1},{x:2640,y:720,w:48,h:40,min:2380,max:2860,vx:1.1,dir:1},{x:3060,y:720,w:48,h:40,min:2920,max:3260,vx:.9,dir:-1}];
+const checkpoints=[{x:1140,y:760,active:false},{x:2290,y:760,active:false}];
+const gate={x:3420,y:560,w:110,h:200};
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);scale=Math.max(.7,Math.min(1.15,H/800));}
+addEventListener('resize',resize);resize();
+function rects(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
+function resetPlayer(){player.x=player.checkpointX;player.y=player.checkpointY;player.vx=0;player.vy=0;health=3;invincible=120;updateHUD();}
+function updateHUD(){document.getElementById('health').textContent='♥'.repeat(Math.max(0,health))+(health<3?'♡'.repeat(3-health):'');document.getElementById('count').textContent=gemCount+' / 12';}
+function showEnd(ok){won=ok;started=false;title.textContent=ok?'Adventure Complete!':'Try Again';subtitle.textContent=ok?`You reached the temple with ${gemCount} golden gems!`:'The jungle got the better of you. Dust off and go again.';start.textContent=ok?'PLAY AGAIN':'RESTART';overlay.classList.remove('hidden');}
+function restart(){health=3;gemCount=0;won=false;player.checkpointX=120;player.checkpointY=650;player.x=120;player.y=650;player.vx=player.vy=0;gems.forEach(g=>g.taken=false);checkpoints.forEach(c=>c.active=false);updateHUD();started=true;overlay.classList.add('hidden');}
+start.onclick=()=>{if(won||started)restart();else restart();};
+const bind=(id,key)=>{const el=document.getElementById(id);el.addEventListener('pointerdown',e=>{e.preventDefault();keys[key]=true;el.setPointerCapture?.(e.pointerId)});el.addEventListener('pointerup',()=>keys[key]=false);el.addEventListener('pointercancel',()=>keys[key]=false);};bind('left','ArrowLeft');bind('right','ArrowRight');bind('jump',' ');
+addEventListener('keydown',e=>{keys[e.key]=true;if(['ArrowLeft','ArrowRight',' ','ArrowUp'].includes(e.key))e.preventDefault();if(!started&&(e.key===' '||e.key==='Enter'))restart();});
+addEventListener('keyup',e=>keys[e.key]=false);
+function update(){if(!started)return;const left=keys.ArrowLeft||keys.a, right=keys.ArrowRight||keys.d, jump=keys.ArrowUp||keys.w||keys[' '];
+  if(left){player.vx-=.75;player.facing=-1} if(right){player.vx+=.75;player.facing=1} player.vx*=.82;player.vx=Math.max(-7,Math.min(7,player.vx));
+  if(jump&&player.onGround){player.vy=-13.5;player.onGround=false} player.vy+=.72;player.vy=Math.min(16,player.vy);
+  player.x+=player.vx; for(const p of platforms){if(rects(player,p)&&player.vy>=0&&player.y+player.h-player.vy<=p.y+8){player.y=p.y-player.h;player.vy=0;player.onGround=true}}
+  player.y+=player.vy;player.onGround=false;for(const p of platforms){if(rects(player,p)){if(player.vy>=0&&player.y+player.h-player.vy<=p.y+12){player.y=p.y-player.h;player.vy=0;player.onGround=true}else if(player.vy<0&&player.y-player.vy>=p.y+p.h-8){player.y=p.y+p.h;player.vy=0}else{player.x-=player.vx}}}
+  player.x=Math.max(20,Math.min(world.w-player.w-20,player.x));if(player.y>900){health--;shake=12;if(health<=0)showEnd(false);else resetPlayer();}
+  player.anim+=Math.abs(player.vx)*.08;if(invincible>0)invincible--;
+  gems.forEach(g=>{if(!g.taken&&rects(player,{x:g.x-14,y:g.y-14,w:28,h:28})) {g.taken=true;gemCount++;updateHUD();shake=4}});
+  enemies.forEach(en=>{en.x+=en.vx*en.dir;if(en.x<en.min||en.x>en.max)en.dir*=-1;if(invincible<=0&&rects(player,en)){health--;shake=14;if(health<=0)showEnd(false);else{invincible=120;player.vy=-10;player.vx=-en.dir*6;if(player.checkpointX){} }updateHUD();}});
+  checkpoints.forEach(c=>{if(!c.active&&player.x>c.x){c.active=true;player.checkpointX=c.x+20;player.checkpointY=c.y-58}});
+  if(rects(player,gate)&&gemCount>=12)showEnd(true);
+  cam+=(player.x-W/(2*scale)-cam)*.08;cam=Math.max(0,Math.min(world.w-W/scale,cam));
+}
+function drawLeaf(x,y,r,angle,color){ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,-r);ctx.bezierCurveTo(r,-r*.5,r,r*.45,0,r);ctx.bezierCurveTo(-r,r*.45,-r,-r*.5,0,-r);ctx.fill();ctx.restore();}
+function drawBackground(){const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,'#74b98a');grad.addColorStop(.72,'#a9d59b');grad.addColorStop(1,'#4e9b68');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+  ctx.save();ctx.translate(-cam*.18*scale,0);ctx.globalAlpha=.28;ctx.fillStyle='#1d7052';for(let i=-2;i<16;i++){const x=i*250+((i%2)*45);ctx.beginPath();ctx.moveTo(x,650);ctx.bezierCurveTo(x+20,430,x+60,260,x+15,70);ctx.bezierCurveTo(x+180,220,x+180,470,x+250,650);ctx.fill();}ctx.restore();
+  ctx.save();ctx.translate(-cam*.35*scale,0);ctx.globalAlpha=.7;for(let i=-2;i<20;i++){const x=i*180;ctx.fillStyle=i%2?'#3d9461':'#2d8054';ctx.beginPath();ctx.ellipse(x+20,250,130,260,0,0,Math.PI*2);ctx.fill();}ctx.restore();
+}
+function drawWorld(){ctx.save();ctx.scale(scale,scale);ctx.translate(shake?(Math.random()*shake-shake/2):0,0);ctx.translate(-cam,0);
+  ctx.fillStyle='#b58a55';for(const p of platforms){ctx.fillRect(p.x,p.y,p.w,p.h);ctx.fillStyle='#7d5b3d';for(let x=p.x+20;x<p.x+p.w;x+=38){ctx.beginPath();ctx.moveTo(x,p.y);ctx.lineTo(x+10,p.y);ctx.lineTo(x-2,p.y+p.h);ctx.lineTo(x-16,p.y+p.h);ctx.fill()}ctx.fillStyle='#5b9d45';ctx.fillRect(p.x,p.y-12,p.w,18);ctx.fillStyle='#82b94c';ctx.fillRect(p.x,p.y-18,p.w,8);for(let x=p.x;x<p.x+p.w;x+=32)drawLeaf(x+12,p.y-12,17,-.5+(x%5)*.1,'#4e9139');}
+  // temple gate
+  ctx.fillStyle='#777d65';ctx.fillRect(gate.x,gate.y,gate.w,gate.h);ctx.fillStyle='#8d9475';ctx.fillRect(gate.x+10,gate.y+18,gate.w-20,gate.h-18);ctx.fillStyle='#526653';ctx.beginPath();ctx.arc(gate.x+55,gate.y+200,45,Math.PI,0);ctx.fill();ctx.fillStyle='#31493d';ctx.fillRect(gate.x+32,gate.y+108,46,92);ctx.fillStyle='#b89a62';ctx.fillRect(gate.x-14,gate.y-18,138,24);
+  checkpoints.forEach(c=>{ctx.fillStyle=c.active?'#ffc83d':'#7ea058';ctx.fillRect(c.x,c.y-95,8,95);ctx.beginPath();ctx.moveTo(c.x+8,c.y-92);ctx.lineTo(c.x+58,c.y-75);ctx.lineTo(c.x+8,c.y-55);ctx.fill()});
+  gems.forEach(g=>{if(g.taken)return;const y=g.y+Math.sin(performance.now*.004+g.phase)*5;ctx.save();ctx.translate(g.x,y);ctx.rotate(performance.now*.001+g.phase);ctx.fillStyle='#ffbd27';ctx.beginPath();ctx.moveTo(0,-15);ctx.lineTo(12,-5);ctx.lineTo(9,10);ctx.lineTo(0,16);ctx.lineTo(-9,10);ctx.lineTo(-12,-5);ctx.closePath();ctx.fill();ctx.fillStyle='rgba(255,255,255,.65)';ctx.beginPath();ctx.moveTo(-4,-9);ctx.lineTo(4,-11);ctx.lineTo(7,-4);ctx.lineTo(-1,-1);ctx.fill();ctx.restore();});
+  enemies.forEach(en=>{ctx.save();ctx.translate(en.x,en.y);ctx.scale(en.dir,1);ctx.fillStyle='#6d553c';ctx.beginPath();ctx.ellipse(24,28,24,20,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#8b3d32';ctx.beginPath();ctx.moveTo(8,18);ctx.lineTo(18,-3);ctx.lineTo(28,17);ctx.moveTo(22,18);ctx.lineTo(36,-3);ctx.lineTo(42,17);ctx.fill();ctx.fillStyle='#f1dfbd';ctx.beginPath();ctx.arc(19,12,3,0,7);ctx.arc(32,12,3,0,7);ctx.fill();ctx.restore();});
+  // player
+  if(invincible<=0||Math.floor(invincible/6)%2===0){ctx.save();ctx.translate(player.x+player.w/2,player.y+player.h/2);ctx.scale(player.facing,1);ctx.rotate(player.onGround?0:player.vy*.015);ctx.fillStyle='#263f35';ctx.fillRect(-15,-4,30,30);ctx.fillStyle='#d69a62';ctx.beginPath();ctx.arc(0,-17,15,0,7);ctx.fill();ctx.fillStyle='#2a4b35';ctx.beginPath();ctx.moveTo(-16,-20);ctx.quadraticCurveTo(0,-34,16,-20);ctx.lineTo(13,-29);ctx.lineTo(-13,-29);ctx.fill();ctx.fillStyle='#e8c34f';ctx.fillRect(-16,-8,32,8);ctx.fillStyle='#513827';ctx.fillRect(-13,24,9,16);ctx.fillRect(4,24,9,16);ctx.restore();}
+  ctx.restore();if(shake>0)shake*=.8;
+}
+function frame(){update();drawBackground();drawWorld();requestAnimationFrame(frame)}frame();
+})();
+</script>
+</body>
+</html>
