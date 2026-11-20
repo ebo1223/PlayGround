@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101813">
+  <title>Wildshard — The Gloamwood Hunt</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <a class="wordmark" href="#" aria-label="Wildshard home"><span class="brand-mark">✳</span> WILDSHARD</a>
+      <div class="top-center"><span class="season-dot"></span> FIELD JOURNAL <span class="top-divider">/</span> EXPEDITION 07</div>
+      <button class="sound-button" id="soundToggle" aria-label="Toggle sound">♫ <span>SOUND ON</span></button>
+    </header>
+
+    <section class="game-layout" aria-label="Monster hunting game">
+      <aside class="side-panel left-panel">
+        <div class="eyebrow">THE GLOAMWOOD</div>
+        <h1>One hunt.<br><em>One legend.</em></h1>
+        <p class="intro">Something ancient has stirred beneath the canopy. Track it. Read its tells. Bring it down.</p>
+        <div class="quest-card">
+          <div class="quest-top"><span class="quest-icon">✦</span><span>URGENT CONTRACT</span><span class="quest-rank">★ 04</span></div>
+          <h2>Mirefang<br>the Briarback</h2>
+          <div class="quest-rule"></div>
+          <div class="quest-row"><span>TARGET</span><b>1 apex beast</b></div>
+          <div class="quest-row"><span>LOCALE</span><b>Gloamwood basin</b></div>
+          <div class="quest-row"><span>CONDITION</span><b>Do not fall</b></div>
+          <div class="reward"><span>BOUNTY</span><strong>480 <small>G</small></strong><span class="reward-gem">◆</span></div>
+        </div>
+        <div class="field-note"><span class="note-icon">⌁</span><p><strong>Field note</strong><br>Mirefang winds up before every lunge. A clean dodge leaves it open.</p></div>
+      </aside>
+
+      <section class="stage-column">
+        <div class="stage-frame">
+          <div class="stage-topline">
+            <div class="location"><span class="location-icon">⌖</span><div><b>GLOAMWOOD BASIN</b><small>LOWER CANOPY · 19:42</small></div></div>
+            <div class="hunt-clock"><span class="clock-dot"></span><span id="clock">00:00</span></div>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="gameCanvas" width="960" height="600" aria-label="Hunt arena. Move with WASD, aim with mouse, attack with click, dodge with Space, heal with Q."></canvas>
+            <div class="boss-bar-wrap" id="bossBarWrap">
+              <div class="boss-label"><span class="boss-skull">☠</span><span>MIRE FANG</span><small>BRIARBACK APEX</small><span class="boss-phase" id="bossPhase">STALKING</span></div>
+              <div class="boss-track"><div class="boss-fill" id="bossFill"></div><span class="boss-segment"></span><span class="boss-segment"></span></div>
+            </div>
+            <div class="center-message" id="centerMessage" aria-live="polite"></div>
+            <div class="control-tip" id="controlTip"><span>WASD</span> MOVE <i>·</i> <span>CLICK</span> STRIKE <i>·</i> <span>SPACE</span> DODGE</div>
+            <button class="pause-button" id="pauseButton" aria-label="Pause game">Ⅱ</button>
+          </div>
+          <div class="stage-bottomline">
+            <div class="hunter-status">
+              <div class="hunter-avatar">♙</div>
+              <div class="hunter-bars"><div class="hunter-name">ASHEN WARDEN <span>LV. 08</span></div><div class="health-track"><div id="healthFill" class="health-fill"></div><span id="healthText">100 / 100</span></div><div class="stamina-track"><div id="staminaFill" class="stamina-fill"></div></div></div>
+            </div>
+            <div class="consumables"><div class="consumable"><span class="potion-icon">✚</span><span class="consumable-count" id="potionCount">3</span><small>Q</small></div><div class="consumable-label">VITALITY<br>TONIC</div></div>
+            <div class="weapon-chip"><span class="weapon-icon">⚔</span><div><b>IRON LONGSWORD</b><small>SHARP · 84%</small></div><span class="weapon-chevron">⌄</span></div>
+          </div>
+        </div>
+        <div class="progress-row"><span>HUNT PROGRESS</span><div class="progress-track"><i id="progressFill"></i></div><span id="progressPercent">0%</span><span class="progress-divider">|</span><span class="faint">TARGET WOUNDED</span></div>
+      </section>
+
+      <aside class="side-panel right-panel">
+        <div class="map-heading"><span>FIELD MAP</span><span class="map-live"><i></i> LIVE</span></div>
+        <div class="map-box"><canvas id="mapCanvas" width="180" height="180"></canvas><span class="map-north">N</span></div>
+        <div class="map-legend"><span><i class="legend-player"></i> YOU</span><span><i class="legend-beast"></i> TARGET</span></div>
+        <div class="intel-card"><div class="intel-title"><span>⌁</span> TARGET INTEL</div><div class="intel-line"><span>THREAT</span><b class="threat">SEVERE</b></div><div class="intel-line"><span>WEAKNESS</span><b>✧ Frost</b></div><div class="intel-line"><span>BEHAVIOR</span><b id="behaviorText">Stalking</b></div></div>
+        <div class="controls-card"><div class="intel-title">FIELD CONTROLS</div><div class="control-row"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>MOVE</span></div><div class="control-row"><kbd>CLICK</kbd><span>SWING SWORD</span></div><div class="control-row"><kbd>SPACE</kbd><span>DODGE / I-FRAME</span></div><div class="control-row"><kbd>Q</kbd><span>DRINK TONIC</span></div><div class="control-row"><kbd>ESC</kbd><span>PAUSE HUNT</span></div></div>
+        <div class="tip-card"><span>✦</span><p>Watch for the <b>red flash</b> — that's your moment to evade.</p></div>
+      </aside>
+    </section>
+    <footer class="footer"><span>WILDSHARD <i>·</i> FIELD JOURNAL VOL. I</span><span>AN ORIGINAL HUNTING ADVENTURE</span><span>© 2026 WARDEN'S GUILD</span></footer>
+  </main>
+
+  <div class="modal-backdrop" id="startModal">
+    <div class="modal-card intro-modal"><div class="modal-emblem">✳</div><div class="eyebrow">EXPEDITION 07 · GLOAMWOOD</div><h2>The forest<br>is <em>listening.</em></h2><p>Apex signs have been spotted at the basin. Track the Mirefang, learn its rhythm, and survive the hunt.</p><div class="modal-controls"><div><kbd>W A S D</kbd><small>MOVE</small></div><div><kbd>CLICK</kbd><small>STRIKE</small></div><div><kbd>SPACE</kbd><small>DODGE</small></div></div><button class="primary-button" id="beginHunt">BEGIN THE HUNT <span>→</span></button><div class="modal-foot">BEST PLAYED WITH A MOUSE & KEYBOARD</div></div>
+  </div>
+  <div class="modal-backdrop hidden" id="endModal"><div class="modal-card end-card"><div class="eyebrow" id="endEyebrow">THE HUNT IS WON</div><h2 id="endTitle">A legend<br><em>remembered.</em></h2><p id="endCopy">The Gloamwood grows quiet. The Guild will hear of this.</p><div class="result-stats"><div><small>TIME</small><b id="resultTime">00:00</b></div><div><small>TONICS USED</small><b id="resultPotions">0</b></div><div><small>REWARD</small><b id="resultReward">480 G</b></div></div><button class="primary-button" id="restartHunt">HUNT AGAIN <span>→</span></button></div></div>
+  <div class="mobile-actions"><button id="mobileDodge">↗<small>DODGE</small></button><button id="mobileAttack">⚔<small>STRIKE</small></button><button id="mobileHeal">✚<small>HEAL</small></button></div>
+  <script src="game.js"></script>
+</body>
+</html>
