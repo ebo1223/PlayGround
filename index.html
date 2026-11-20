@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Blackjack 21</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">21</span><span>BLACKJACK</span></div>
+      <div class="bankroll"><span>BANKROLL</span><strong id="bankroll">$1,000</strong></div>
+    </header>
+
+    <section class="table" id="table">
+      <div class="felt-lines" aria-hidden="true"></div>
+
+      <section class="dealer-zone zone">
+        <div class="zone-heading"><span>DEALER</span><div class="score" id="dealerScore">0</div></div>
+        <div class="cards" id="dealerCards"></div>
+      </section>
+
+      <div class="round-message" id="roundMessage">Place your bet</div>
+
+      <section class="player-zone zone">
+        <div class="cards" id="playerCards"></div>
+        <div class="zone-heading player-heading"><span>YOU</span><div class="score" id="playerScore">0</div></div>
+      </section>
+
+      <aside class="bet-panel">
+        <div class="bet-label"><span>CURRENT BET</span><strong id="currentBet">$0</strong></div>
+        <div class="chips" id="chips">
+          <button class="chip chip-white" data-value="5" aria-label="Bet 5 dollars"><span>5</span></button>
+          <button class="chip chip-red" data-value="25" aria-label="Bet 25 dollars"><span>25</span></button>
+          <button class="chip chip-blue" data-value="50" aria-label="Bet 50 dollars"><span>50</span></button>
+          <button class="chip chip-green" data-value="100" aria-label="Bet 100 dollars"><span>100</span></button>
+        </div>
+        <button class="clear-bet" id="clearBet">CLEAR</button>
+      </aside>
+
+      <nav class="actions" id="actions">
+        <button class="action secondary" id="dealBtn" disabled>DEAL</button>
+        <button class="action" id="hitBtn" disabled>HIT</button>
+        <button class="action" id="standBtn" disabled>STAND</button>
+      </nav>
+    </section>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>

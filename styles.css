@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700;800&family=Libre+Baskerville:wght@700&display=swap');
+
+:root { --ink:#101a18; --cream:#f7f3e8; --gold:#c7a65a; --red:#b43a32; --green:#0d4c3b; }
+* { box-sizing:border-box; }
+body { margin:0; min-height:100vh; overflow:hidden; background:#e9e5da; color:var(--cream); font-family:"DM Sans",sans-serif; }
+.game-shell { min-height:100vh; display:grid; grid-template-rows:78px 1fr; }
+.topbar { height:78px; padding:0 38px; display:flex; align-items:center; justify-content:space-between; background:#fcfaf4; color:#14201d; border-bottom:1px solid #ddd7c8; box-shadow:0 4px 18px rgba(31,38,33,.06); z-index:5; }
+.brand { display:flex; align-items:center; gap:12px; font-family:"Libre Baskerville",serif; font-size:20px; letter-spacing:2px; }
+.brand-mark { width:44px; height:44px; display:grid; place-items:center; border-radius:50%; background:#183c32; color:#f5eedb; font-family:"DM Sans"; font-size:17px; letter-spacing:0; }
+.bankroll { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+.bankroll span { font-size:10px; letter-spacing:2px; color:#7b807b; }
+.bankroll strong { font-size:20px; }
+.table { position:relative; overflow:hidden; background:radial-gradient(ellipse at center, #1c684f 0%, #155741 58%, #0d4233 100%); }
+.table:before { content:""; position:absolute; inset:16px; border:1px solid rgba(230,215,168,.14); border-radius:48% 48% 26% 26%; pointer-events:none; }
+.felt-lines { position:absolute; width:min(760px,58vw); height:min(330px,42vh); left:50%; top:50%; transform:translate(-50%,-48%); border:2px solid rgba(220,199,139,.14); border-radius:50%; }
+.zone { position:absolute; left:50%; width:min(560px,58vw); transform:translateX(-50%); }
+.dealer-zone { top:42px; text-align:center; }
+.player-zone { bottom:44px; text-align:center; }
+.zone-heading { display:inline-flex; align-items:center; gap:10px; height:30px; margin-bottom:8px; color:#d6d8c7; font-size:11px; letter-spacing:3px; }
+.score { width:36px; height:36px; display:grid; place-items:center; border:1px solid rgba(238,230,191,.4); border-radius:50%; color:#fff; font-size:13px; letter-spacing:0; background:rgba(7,54,41,.45); }
+.player-heading { margin:8px 0 0; }
+.cards { height:128px; display:flex; justify-content:center; align-items:center; }
+.card { position:relative; width:86px; height:120px; margin-left:-14px; border-radius:8px; background:#fbfaf5; color:#17201d; box-shadow:0 5px 12px rgba(3,24,18,.32), inset 0 0 0 1px #d9d4c7; font-family:"Libre Baskerville",serif; animation:deal .28s ease-out both; }
+.card:first-child { margin-left:0; }.card.red { color:#bd3d35; }
+.card .rank { position:absolute; left:9px; top:7px; font-size:20px; line-height:18px; }.card .suit { position:absolute; right:8px; bottom:7px; font-size:23px; }
+.card .center-suit { position:absolute; inset:0; display:grid; place-items:center; font-size:42px; }
+.card.back { background:repeating-linear-gradient(45deg,#e8e0c4 0 3px,#245a49 3px 6px); border:5px solid #f5f0df; box-shadow:0 5px 12px rgba(3,24,18,.32); }
+.card.back:after { content:""; position:absolute; inset:8px; border:1px solid rgba(246,239,210,.75); border-radius:4px; }
+@keyframes deal { from { transform:translateY(-18px) rotate(-4deg); opacity:0 } to { transform:none; opacity:1 } }
+.round-message { position:absolute; left:50%; top:51%; transform:translate(-50%,-50%); text-transform:uppercase; letter-spacing:4px; font-family:"Libre Baskerville",serif; font-size:13px; color:rgba(239,231,194,.92); text-shadow:0 2px 8px rgba(0,0,0,.15); }
+.bet-panel { position:absolute; left:28px; bottom:28px; width:170px; padding:14px 14px 12px; border:1px solid rgba(224,211,167,.18); border-radius:12px; background:rgba(8,61,46,.72); backdrop-filter:blur(4px); }
+.bet-label { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }.bet-label span { font-size:9px; letter-spacing:1.5px; color:#bfcbbb; }.bet-label strong { font-size:15px; }
+.chips { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }.chip { position:relative; width:31px; height:31px; border:3px solid #f3ecd6; border-radius:50%; box-shadow:0 2px 5px rgba(0,0,0,.25); cursor:pointer; transition:transform .12s; }.chip:hover { transform:translateY(-3px); }.chip:active { transform:scale(.94); }.chip span { position:absolute; inset:4px; display:grid; place-items:center; border:1px dashed rgba(255,255,255,.75); border-radius:50%; color:white; font-size:8px; }
+.chip-white { background:#d8d3bd; }.chip-white span { color:#3d4b44; border-color:#777; }.chip-red { background:#b23a32; }.chip-blue { background:#2e5c84; }.chip-green { background:#3d7857; }
+.clear-bet { width:100%; margin-top:9px; height:24px; border:0; border-top:1px solid rgba(255,255,255,.12); background:none; color:#bfcbbb; font-size:8px; letter-spacing:2px; cursor:pointer; }
+.actions { position:absolute; right:28px; bottom:38px; display:flex; gap:8px; }
+.action { height:48px; min-width:98px; padding:0 18px; border:1px solid rgba(255,255,255,.28); border-radius:7px; background:#f4f0df; color:#18382f; font-size:11px; font-weight:800; letter-spacing:2px; cursor:pointer; box-shadow:0 5px 12px rgba(4,35,27,.22); }.action.secondary { background:#b8a45f; color:white; }.action:hover:not(:disabled) { filter:brightness(1.06); transform:translateY(-1px); }.action:disabled { opacity:.35; cursor:not-allowed; box-shadow:none; }
+@media (max-width:700px) { body { overflow:auto; }.game-shell { min-height:620px; }.topbar { height:64px;padding:0 16px }.brand { font-size:15px }.brand-mark {width:38px;height:38px}.bankroll strong {font-size:16px}.dealer-zone{top:18px}.player-zone{bottom:112px}.zone{width:70vw}.cards{height:105px}.card{width:68px;height:96px}.card .center-suit{font-size:32px}.bet-panel{left:12px;bottom:12px;width:145px}.actions{right:12px;bottom:22px;gap:5px}.action{height:43px;min-width:72px;padding:0 10px;font-size:9px}.round-message{top:49%}.felt-lines{height:280px} }
