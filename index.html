@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Royal Draw — Video Poker</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app-shell">
+<header>
+  <div class="brand"><div class="brand-mark">♠</div><div><h1>ROYAL DRAW</h1><span>Jacks or Better</span></div></div>
+  <button class="sound-btn" id="soundBtn" title="Toggle sound"><span id="soundIcon">◖))</span></button>
+</header>
+<main>
+  <section class="machine">
+    <div class="paytable" id="paytable">
+      <div class="pt-title"><span>HAND</span><span>PAY TABLE</span></div>
+    </div>
+
+    <div class="game-area">
+      <div class="status-row">
+        <div class="status-pill"><span>CREDITS</span><strong id="credits">500</strong></div>
+        <div class="message" id="message">PLACE BET &amp; DEAL</div>
+        <div class="status-pill"><span>WIN</span><strong id="win">0</strong></div>
+      </div>
+      <div class="cards" id="cards"></div>
+    </div>
+
+    <div class="controls">
+      <div class="bet-controls">
+        <button class="side-btn" id="betDown">−</button>
+        <div class="bet-display"><span>BET</span><strong id="bet">1</strong></div>
+        <button class="side-btn" id="betUp">+</button>
+        <button class="side-btn bet-max" id="betMax">MAX</button>
+      </div>
+      <button class="deal-btn" id="dealBtn"><span id="dealText">DEAL</span></button>
+    </div>
+  </section>
+</main>
+<footer><span>ROYAL DRAW CASINO</span><span>Jacks or Better · 1–5 Credits</span></footer>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
