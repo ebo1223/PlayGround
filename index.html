@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Space Explorer</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="vignette"></div>
+<div id="hud">
+  <div class="brand"><div class="mark">◈</div><div><b>SPACE</b><span>EXPLORER</span></div></div>
+  <div class="mission"><span>MISSION 04</span><b id="missionName">THE ORION DRIFT</b></div>
+  <div class="resources">
+    <div><span class="label">CRYSTALS</span><strong id="crystals">0</strong><i class="crystalIcon"></i></div>
+    <div><span class="label">DISTANCE</span><strong id="distance">0</strong><small>LY</small></div>
+  </div>
+</div>
+<div id="bottom">
+  <div class="health"><span>HULL INTEGRITY</span><div class="bar"><i id="healthBar"></i></div></div>
+  <div id="status">SCANNING SECTOR...</div>
+  <div class="boost"><span>NITRO</span><div class="bars" id="boostBars"><i></i><i></i><i></i><i></i><i></i></div></div>
+</div>
+<div id="start" class="panel">
+  <div class="eyebrow">ORION REACH // SECTOR 07</div>
+  <h1>EXPLORE THE<br><em>UNKNOWN</em></h1>
+  <p>Navigate the asteroid field. Harvest cosmic crystals and discover jump gates.</p>
+  <button id="startBtn"><span>LAUNCH EXPEDITION</span><b>→</b></button>
+  <div class="controls"><kbd>WASD</kbd> OR <kbd>ARROWS</kbd> TO FLY <span>•</span> <kbd>SHIFT</kbd> BOOST</div>
+</div>
+<div id="gameOver" class="panel hidden">
+  <div class="eyebrow">EXPEDITION ENDED</div><h1 id="overTitle">SIGNAL<br><em>LOST</em></h1>
+  <p id="overText"></p><button id="againBtn"><span>TRY AGAIN</span><b>↻</b></button>
+</div>
+<script src="game.js"></script>
+</body></html>
