@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>APEX GP // Formula Racing</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="game" aria-label="Formula racing game"></canvas>
+
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">A</span><div><strong>APEX GP</strong><small>FORMULA 2026</small></div></div>
+    <div class="lap"><span>LAP</span><strong id="lap">1/3</strong></div>
+    <div class="position"><span>POSITION</span><strong><b id="position">1</b><small>/6</small></strong></div>
+  </header>
+
+  <div class="hud-left">
+    <div class="speed"><strong id="speed">000</strong><span>KM/H</span></div>
+    <div class="gear"><span>GEAR</span><strong id="gear">1</strong></div>
+  </div>
+
+  <div class="hud-right">
+    <div class="gauge-label">TIRE TEMP</div>
+    <div class="tires"><i></i><i></i><i></i><i></i></div>
+    <div class="bars">
+      <div><span>ERS</span><b><i id="ersBar"></i></b></div>
+      <div><span>FUEL</span><b><i id="fuelBar"></i></b></div>
+    </div>
+  </div>
+
+  <div class="race-message" id="raceMessage"><strong>GO!</strong></div>
+  <div class="controls" id="controls">
+    <button id="left" aria-label="Steer left">‹</button>
+    <button id="right" aria-label="Steer right">›</button>
+  </div>
+
+  <div class="pause" id="pause">Ⅱ</div>
+
+  <div class="overlay" id="overlay">
+    <div class="panel">
+      <div class="eyebrow">MONACO // GRAND PRIX</div>
+      <h1 id="title">APEX GP</h1>
+      <p id="subtitle">Night qualifying · 3 laps</p>
+      <button id="startBtn"><span>START ENGINE</span><b>›</b></button>
+      <div class="keys"><span>W / ↑</span> THROTTLE <span>A D / ← →</span> STEER <span>SPACE</span> BOOST</div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
