@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Off-Road Rally</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10140f;font-family:Impact,"Arial Black",sans-serif}canvas{display:block;width:100%;height:100%}
+#hud{position:fixed;inset:0;pointer-events:none;color:#fff;text-transform:uppercase;letter-spacing:1px;text-shadow:0 3px 0 #000}#top{position:absolute;top:18px;left:22px;right:22px;display:flex;justify-content:space-between}.box{background:rgba(14,18,13,.82);border:2px solid rgba(255,255,255,.18);border-radius:10px;padding:8px 13px}.label{font:700 11px Arial;color:#b8c0b2}.value{font-size:24px}.stage{position:absolute;top:18px;left:50%;transform:translateX(-50%);text-align:center}.stage .value{color:#ffd52c}
+#speed{position:absolute;bottom:24px;right:28px;text-align:right}.speednum{font-size:48px;line-height:.85}.speedunit{font:800 12px Arial;color:#ffd52c}
+#controls{position:absolute;left:18px;bottom:22px;display:flex;gap:10px;pointer-events:auto}#controls button{width:66px;height:66px;border:2px solid rgba(255,255,255,.25);border-radius:50%;background:rgba(12,17,12,.72);color:white;font-size:26px;touch-action:none;box-shadow:0 5px 16px #0008}#controls button:active{background:#d7ad28;color:#111}
+#start,#finish{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(8,11,7,.72);z-index:5;color:white;text-align:center}#start.hidden,#finish.hidden{display:none}.panel{width:min(520px,calc(100% - 32px));padding:28px;background:linear-gradient(145deg,#1d2618,#11150f);border:2px solid #58644e;border-radius:16px;box-shadow:0 20px 60px #000b}.panel h1{margin:0;font-size:58px;line-height:.9;color:#ffd52c;text-transform:uppercase;text-shadow:4px 5px 0 #8a5812}.panel p{font:700 13px Arial;color:#bec7b8}.panel button{margin-top:10px;border:0;border-radius:8px;padding:13px 28px;background:#ffd52c;color:#1a1b12;font:900 16px Arial;text-transform:uppercase;cursor:pointer}.trophy{font-size:44px}
+@media(max-width:700px){.panel h1{font-size:42px}.box{padding:6px 8px}.value{font-size:18px}.stage{top:10px}.stage .value{font-size:16px}.speednum{font-size:36px}.stage{display:none}#controls button{width:58px;height:58px}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud"><div id="top"><div class="box"><div class="label">Position</div><div class="value"><span id="place">1</span> / 6</div></div><div class="stage box"><div class="label">Stage 1</div><div class="value">Dust Valley</div></div><div class="box"><div class="label">Time</div><div class="value" id="time">0:00.000</div></div></div><div id="speed"><div class="speednum"><span id="speednum">000</span></div><div class="speedunit">KM/H</div></div><div id="controls"><button data-key="left">◀</button><button data-key="right">▶</button></div></div>
+<div id="start"><div class="panel"><h1>Off-Road<br>Rally</h1><p>Race through Dust Valley • Avoid rocks • Finish first</p><button id="play">Start Race</button></div></div>
+<div id="finish" class="hidden"><div class="panel"><div class="trophy">🏆</div><h1 id="finishTitle">Finished!</h1><p id="finishText"></p><button id="again">Race Again</button></div></div>
+<script>
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');let W,H,DPR;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}addEventListener('resize',resize);resize();
+const keys={left:false,right:false};let race=false,startAt=0,elapsed=0,won=false,distance=0,speed=0,steer=0,road=0,flash=0;
+let best=localStorage.offroadBest?+localStorage.offroadBest:0;
+const total=6200,rocks=[],dust=[];for(let i=0;i<24;i++)rocks.push({z:600+i*260,r:(i%5-2)*.58,type:i%3});
+for(let i=0;i<55;i++)dust.push({x:Math.random(),y:Math.random(),a:Math.random()*.5+.15,s:Math.random()*25+10});
+function roadCenter(z){return Math.sin(z*.0013)*.16+Math.sin(z*.0041+1)*.08}
+function draw(){ctx.clearRect(0,0,W,H);const horizon=H*.35;
+// sky
+let g=ctx.createLinearGradient(0,0,0,horizon);g.addColorStop(0,'#86aec1');g.addColorStop(1,'#d9d09a');ctx.fillStyle=g;ctx.fillRect(0,0,W,horizon);
+ctx.fillStyle='#b7b18a';ctx.beginPath();ctx.moveTo(0,horizon);ctx.lineTo(0,horizon-70);for(let x=0;x<=W;x+=90)ctx.lineTo(x,horizon-75-Math.sin(x*.018)*35);ctx.lineTo(W,horizon);ctx.fill();
+ctx.fillStyle='#b07b3a';ctx.fillRect(0,horizon,W,H-horizon);
+// road trapezoids
+for(let y=horizon;y<H;y+=5){let p=(y-horizon)/(H-horizon),z=distance+(1-p)*2100;let rd=roadCenter(z),c=W*(.5+rd*p*.8),hw=45+p*W*.48;ctx.fillStyle=((Math.floor(z/32)%2)?'#a58a52':'#9d8050');ctx.fillRect(c-hw,y,W*.001+hw*2,6)}
+// road verge and center markers
+for(let i=1;i<18;i++){let p=i/18,q=p*p,y=horizon+(H-horizon)*q,world=distance+(1-p)*1800,rd=roadCenter(world),c=W*(.5+rd*q*.8),hw=45+q*W*.48;if(i%3===0){ctx.fillStyle='#d5cb9b';ctx.fillRect(c-hw-10,y,10,Math.max(2,5*q));ctx.fillRect(c+hw,y,10,Math.max(2,5*q))}}
+// rocks
+rocks.forEach(r=>{let z=r.z-distance;if(z>80&&z<2100){let p=1-z/2100,y=horizon+(H-horizon)*p*p,c=W*(.5+(roadCenter(r.z)+r.r)*p*p*.8),sz=8+p*48;if(c> -sz&&c<W+sz){ctx.fillStyle='#54482f';ctx.beginPath();ctx.moveTo(c-sz,y);ctx.lineTo(c-sz*.45,y-sz*.8);ctx.lineTo(c+sz*.55,y-sz*.65);ctx.lineTo(c+sz,y);ctx.closePath();ctx.fill();ctx.strokeStyle='#2e2a20';ctx.lineWidth=3;ctx.stroke();if(Math.abs(c-W/2-steer*W*.22)<sz+34&&p>.63&&p<.82){speed*=.72;flash=10;r.z+=220}}}});
+// dust
+ctx.globalAlpha=.22;ctx.fillStyle='#ead19a';dust.forEach(d=>{let y=(d.y*H+distance*.08*d.s)%H,x=(d.x*W+road*30)%W;ctx.beginPath();ctx.arc(x,y,2+d.s*.08,0,7);ctx.fill()});ctx.globalAlpha=1;
+// car
+let cx=W/2+steer*W*.22,cy=H*.79,scale=Math.max(.75,Math.min(1.25,W/1000));ctx.save();ctx.translate(cx,cy);ctx.rotate(steer*.09);ctx.scale(scale,scale);
+ctx.fillStyle='#181711';ctx.fillRect(-72,-20,144,46);ctx.fillStyle='#111';ctx.fillRect(-80,-12,18,52);ctx.fillRect(62,-12,18,52);ctx.fillStyle='#242b20';ctx.fillRect(-62,-43,124,73);ctx.fillStyle='#e23b25';ctx.beginPath();ctx.moveTo(-58,-36);ctx.lineTo(-38,-70);ctx.lineTo(38,-70);ctx.lineTo(58,-36);ctx.closePath();ctx.fill();ctx.fillStyle='#ffd52c';ctx.fillRect(-50,-49,100,12);ctx.fillStyle='#7ba0a5';ctx.fillRect(-34,-63,68,24);ctx.fillStyle='#151817';ctx.fillRect(-43,-31,86,25);ctx.fillStyle='#f4d66a';ctx.fillRect(-48,-8,12,18);ctx.fillRect(36,-8,12,18);ctx.restore();
+if(flash){ctx.fillStyle='rgba(255,80,30,.18)';ctx.fillRect(0,0,W,H);flash--}
+}
+function update(dt){if(!race)return;elapsed=(performance.now()-startAt)/1000;let dir=(keys.right?1:0)-(keys.left?1:0);steer+=((dir*.75)-steer)*dt*4;steer=Math.max(-1.2,Math.min(1.2,steer));speed=Math.min(190,Math.max(0,speed+(14-Math.abs(steer)*4)*dt));distance+=speed*dt*4.2;road+=steer*dt*1.8;if(distance>=total)finish();document.getElementById('speednum').textContent=String(Math.round(speed)).padStart(3,'0');document.getElementById('place').textContent=Math.max(1,Math.min(6,6-Math.floor(distance/1200)));document.getElementById('time').textContent=format(elapsed)}
+function format(s){let m=Math.floor(s/60),sec=Math.floor(s%60),ms=Math.floor((s%1)*1000);return m+':'+String(sec).padStart(2,'0')+'.'+String(ms).padStart(3,'0')}
+function finish(){race=false;won=distance>=total;let pos=won?1:6,finalTime=elapsed;if(won){if(!best||elapsed<best){best=elapsed;localStorage.offroadBest=best}}document.getElementById('finishTitle').textContent=won?'Stage Complete!':'Race Over';document.getElementById('finishText').textContent=(won?'Finish time: '+format(elapsed)+(best===elapsed?' • New best!':''):'Hit too many obstacles — try again');document.getElementById('finish').classList.remove('hidden')}
+function loop(t){let dt=Math.min(.033,(t-(loop.last||t))/1000);loop.last=t;update(dt||0);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+function start(){document.getElementById('start').classList.add('hidden');document.getElementById('finish').classList.add('hidden');distance=0;speed=45;steer=0;road=0;elapsed=0;race=true;startAt=performance.now();rocks.forEach((r,i)=>r.z=600+i*260)}document.getElementById('play').onclick=start;document.getElementById('again').onclick=start;
+addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||'a'){keys.left=true}if(e.key==='ArrowRight'||e.key==='d')keys.right=true;if(e.key===' '&&!race&&document.getElementById('start').classList.contains('hidden'))start()});
+addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=false;if(e.key==='ArrowRight'||e.key==='d')keys.right=false});
+document.querySelectorAll('#controls button').forEach(b=>{let k=b.dataset.key;function down(e){e.prevent();keys[k]=true}function up(e){e.prevent();keys[k]=false}b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointerleave',up);b.addEventListener('pointercancel',up)});
+</script>
+</body>
+</html>
