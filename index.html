@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Pirate Adventure</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="vignette"></div>
+<div id="hud">
+  <div class="brand"><span class="skull">☠</span><b>PIRATE<br>ADVENTURE</b></div>
+  <div class="status">
+    <div class="bar hp"><span>Hull</span><div><i id="hpBar"></i></div><b id="hpText">100</b></div>
+    <div class="bar cargo"><span>Crew</span><div><i id="crewBar"></i></div><b id="crewText">100</b></div>
+  </div>
+  <div class="resources"><span>◈ <b id="gold">0</b></span><span>◆ <b id="rum">0</b></span><span>⚓ <b id="parts">0</b></span></div>
+</div>
+<div id="quest"><small>CURRENT VOYAGE</small><strong id="questTitle">Find the Sunken Treasure</strong><div id="questText">Explore the island to the east</div></div>
+<div id="minimapWrap"><canvas id="minimap" width="180" height="180"></canvas></div>
+<div id="controls"><button data-key="left">◀</button><button data-key="up">▲</button><button data-key="right">▶</button><button data-key="down">▼</button><button id="fire">FIRE</button></div>
+<div id="start" class="panel">
+  <div class="sun"></div><div class="title"><small>THE</small><h1>PIRATE<br>ADVENTURE</h1></div>
+  <p>Explore the forbidden archipelago.<br>Claim its treasure. Survive the Red Fleet.</p>
+  <button id="startBtn">SET SAIL <span>›</span></button>
+  <div class="keys"><kbd>WASD</kbd> Sail &nbsp; <kbd>SPACE</kbd> Fire Cannons &nbsp; <kbd>E</kbd> Interact</div>
+</div>
+<div id="toast"></div>
+<script src="game.js"></script>
+</body>
+</html>
