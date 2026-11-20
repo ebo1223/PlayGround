@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Dungeon Escape</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">◆</span><span>DUNGEON ESCAPE</span></div>
+      <div class="stats">
+        <div class="stat"><span class="stat-label">HEALTH</span><div id="hearts" class="hearts"></div></div>
+        <div class="stat"><span class="stat-label">KEYS</span><div id="keys" class="keys"></div></div>
+      </div>
+    </header>
+
+    <section class="stage-wrap">
+      <canvas id="game" width="960" height="576" aria-label="Dungeon Escape game"></canvas>
+      <div id="startScreen" class="overlay visible">
+        <div class="panel">
+          <div class="eyebrow">THE LOWER KEEP</div>
+          <h1>DUNGEON<br><em>ESCAPE</em></h1>
+          <p>Collect every key and reach the portal before the dungeon claims you.</p>
+          <button id="startBtn" class="primary">ENTER THE DUNGEON <span>›</span></button>
+          <div class="controls"><kbd>WASD</kbd> or <kbd>ARROWS</kbd> to move · <kbd>SHIFT</kbd> to dash</div>
+        </div>
+      </div>
+      <div id="message" class="toast"></div>
+      <div id="pauseBadge" class="pause-badge">PAUSED</div>
+    </section>
+
+    <footer>
+      <div class="objective"><span id="objectiveDot" class="dot"></span><span id="objective">Recover the 3 lost keys</span></div>
+      <button id="pauseBtn" class="icon-btn" aria-label="Pause">Ⅱ</button>
+      <button id="restartBtn" class="icon-btn" aria-label="Restart">↻</button>
+    </footer>
+  </main>
+
+  <div class="touch-controls" aria-label="Touch controls">
+    <div class="dpad">
+      <button data-dir="up" class="up">▲</button>
+      <button data-dir="left" class="left">◀</button>
+      <button data-dir="down" class="down">▼</button>
+      <button data-dir="right" class="right">▶</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
