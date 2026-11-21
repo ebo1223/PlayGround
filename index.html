@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Coastal Rush</title>
+  <style>
+    :root { --ink:#08213d; --cream:#fff8dd; --orange:#ff7a32; --cyan:#43c8dc; }
+    * { box-sizing:border-box; }
+    html,body { width:100%; height:100%; margin:0; overflow:hidden; background:#071b31; font-family:Impact,"Arial Black",system-ui,sans-serif; }
+    canvas { width:100%; height:100%; display:block; }
+    #hud { position:absolute; inset:0; pointer-events:none; color:white; text-shadow:0 3px 0 rgba(0,0,0,.25); }
+    .topbar { position:absolute; left:24px; right:24px; top:18px; display:flex; justify-content:space-between; align-items:flex-start; }
+    .stat { background:rgba(7,31,57,.86); border:3px solid rgba(255,255,255,.92); border-radius:15px; padding:8px 16px; box-shadow:0 5px 0 rgba(4,19,36,.28); }
+    .stat small { display:block; font:700 11px/1.1 system-ui,sans-serif; letter-spacing:2px; opacity:.72; }
+    .stat strong { display:block; font-size:27px; line-height:1.05; }
+    #position { background:var(--orange); transform:rotate(-2deg); }
+    #position strong { font-size:34px; }
+    #lap { text-align:center; }
+    #speed { width:140px; }
+    #speed strong { color:#ffd66b; }
+    #boost { position:absolute; left:50%; bottom:26px; width:min(280px,42vw); height:18px; transform:translateX(-50%); background:rgba(6,34,59,.75); border:3px solid white; border-radius:20px; overflow:hidden; }
+    #boostFill { width:100%; height:100%; background:linear-gradient(90deg,#ffda55,#ff812f); box-shadow:0 0 14px #ff9c38; }
+    #countdown { position:absolute; inset:0; display:grid; place-items:center; font-size:min(22vw,180px); color:#fff4b6; -webkit-text-stroke:8px #08213d; opacity:0; }
+    #overlay { position:absolute; inset:0; display:grid; place-items:center; background:linear-gradient(120deg,rgba(5,30,53,.3),rgba(5,30,53,.65)); pointer-events:auto; }
+    .panel { width:min(600px,calc(100% - 32px)); text-align:center; color:white; }
+    .eyebrow { display:inline-block; margin-bottom:8px; color:#ffd66b; font:900 13px system-ui,sans-serif; letter-spacing:5px; text-transform:uppercase; }
+    h1 { margin:0; font-size:clamp(66px,12vw,118px); line-height:.78; letter-spacing:-5px; text-transform:uppercase; -webkit-text-stroke:4px var(--ink); text-shadow:0 10px 0 #ff7a32,0 16px 0 rgba(4,28,51,.35); transform:rotate(-2deg); }
+    h1 span { display:block; color:#fff7d1; }
+    .sub { margin:30px auto 20px; font:800 14px system-ui,sans-serif; letter-spacing:2px; }
+    button { border:4px solid white; border-radius:14px; padding:15px 28px; background:#ff7a32; color:white; font:900 20px Impact,"Arial Black",sans-serif; letter-spacing:2px; text-transform:uppercase; box-shadow:0 7px 0 #b93d24; cursor:pointer; }
+    button:active { transform:translateY(5px); box-shadow:0 2px 0 #b93d24; }
+    #controls { margin-top:18px; display:flex; justify-content:center; gap:22px; font:800 12px system-ui,sans-serif; opacity:.88; }
+    kbd { display:inline-grid; place-items:center; min-width:30px; height:30px; margin:0 3px; border:2px solid white; border-radius:7px; background:rgba(7,31,57,.7); }
+    #touch { display:none; position:absolute; inset:auto 14px 20px; justify-content:space-between; pointer-events:none; }
+    .touchgroup { display:flex; gap:10px; }
+    .touchkey { width:72px; height:72px; border-radius:50%; border:3px solid rgba(255,255,255,.9); background:rgba(7,31,57,.55); color:white; font:900 28px system-ui; pointer-events:auto; }
+    #touchBoost { background:rgba(255,122,50,.75); }
+    @media (pointer:coarse), (max-width:700px) { #touch { display:flex } #boost { bottom:112px } #controls { display:none } .topbar { left:10px; right:10px } .stat { padding:7px 9px } .stat strong { font-size:20px } #speed { width:105px } }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="hud">
+    <div class="topbar">
+      <div class="stat" id="position"><small>POSITION</small><strong><span id="place">1</span><span style="font-size:16px">/6</span></strong></div>
+      <div class="stat" id="lap"><small>LAP</small><strong><span id="lapNum">1</span> / 3</strong></div>
+      <div class="stat" id="speed"><small>SPEED</small><strong><span id="speedNum">0</span> <span style="font-size:12px">MPH</span></strong></div>
+    </div>
+    <div id="countdown">3</div>
+    <div id="boost"><div id="boostFill"></div></div>
+  </div>
+  <div id="overlay">
+    <div class="panel">
+      <div class="eyebrow">Sunset Bay Grand Prix</div>
+      <h1><span>Coastal</span>Rush</h1>
+      <div class="sub">RACE • DRIFT • BOOST</div>
+      <button id="start">Start Race</button>
+      <div id="controls"><div><kbd>←</kbd><kbd>→</kbd> STEER</div><div><kbd>↑</kbd> THROTTLE</div><div><kbd>SPACE</kbd> BOOST</div></div>
+    </div>
+  </div>
+  <div id="touch">
+    <div class="touchgroup"><button class="touchkey" data-key="left">◀</button><button class="touchkey" data-key="right">▶</button></div>
+    <div class="touchgroup"><button class="touchkey" data-key="boost" id="touchBoost">⚡</button><button class="touchkey" data-key="up">▲</button></div>
+  </div>
+<script>
+const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
+let W,H,DPR,course;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+addEventListener('resize',resize);resize();
+
+const keys={};
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(['ArrowLeft','ArrowRight','ArrowUp',' ','Spacebar'].includes(e.key))e.prevent;});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key;const on=e=>{e.preventDefault();keys[k]=true};const off=e=>{keys[k]=false};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);});
+
+const rand=(a,b)=>a+Math.random*(b-a);
+let state='menu',started=false,finishTime=0;
+const player={x:0,y:0,angle:Math.PI/2,speed:0,boost:100,lap:1,progress:0,finish:false};
+const ai=[];
+for(let i=0;i<5;i++) ai.push({lane:(i-2)*.22,speed:210+Math.random()*28,progress:-i*.025,lap:1,color:['#ff4f68','#ffd25a','#53ddd1','#a88cff','#f5944d'][i]});
+
+function trackCenter(t){
+  // loop in normalized world coordinates, y increases upward; 0=bottom-ish
+  const cx=1.5+0.55*Math.cos(t*0.9)*Math.sin(t*.37);
+  const cy=1.1+1.7*Math.sin(t*.72);
+  return {x:cx,y:cy};
+}
+function trackPoint(t){
+  const scale=Math.min(W/4.5,H/5.2); const c=trackCenter(t);
+  return {x:W/2+c.x*scale, y:H/2+c.y*scale};
+}
+function trackAngle(t){const a=trackPoint(t-.01),b=trackPoint(t+.01);return Math.atan2(b.y-a.y,b.x-a.x);}
+
+function reset(){player.x=W*.5;player.y=H*.72;player.angle=-Math.PI/2;player.speed=0;player.boost=100;player.lap=1;player.progress=0;player.finish=false;for(let i=0;i<ai.length;i++){ai[i].lane=(i-2)*.22;ai[i].speed=205+Math.random()*35;ai[i].progress=-i*.025;ai[i].lap=1;} }
+
+function drawTrack(){
+  ctx.fillStyle='#167fbe';ctx.fillRect(0,0,W,H);
+  // sunlit water
+  ctx.globalAlpha=.16;ctx.fillStyle='#75d8df';
+  for(let y=-20;y<H;y+=38){ctx.beginPath();for(let x=-20;x<W+20;x+=18){const yy=y+Math.sin(x*.018+y*.04)*7;ctx.moveTo(x,yy);ctx.lineTo(x+10,yy)}ctx.strokeStyle='#d7f4e8';ctx.lineWidth=2;ctx.stroke()}ctx.globalAlpha=1;
+  ctx.strokeStyle='#4f9b48';ctx.lineWidth=Math.min(W,H)*.32;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.beginPath();for(let i=0;i<=200;i++){let p=trackPoint(i/200*Math.PI*2);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}ctx.closePath();ctx.stroke();
+  ctx.strokeStyle='#d5b86d';ctx.lineWidth=Math.min(W,H)*.235;ctx.stroke();
+  ctx.strokeStyle='#36b4b0';ctx.lineWidth=Math.min(W,H)*.19;ctx.stroke();
+  // lane dashes
+  ctx.setLineDash([18,28]);ctx.lineDashOffset=-performance.now()/40;ctx.strokeStyle='rgba(255,255,220,.72)';ctx.lineWidth=3;
+  ctx.beginPath();for(let i=0;i<=200;i++){let p=trackPoint(i/200*Math.PI*2);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)}ctx.closePath();ctx.stroke();ctx.setLineDash([]);
+  // islands / palms
+  ctx.fillStyle='#77b95a';ctx.beginPath();ctx.arc(W*.12,H*.18,52,0,7);ctx.arc(W*.86,H*.72,68,0,7);ctx.fill();
+  for(let [x,y] of [[W*.12,H*.16],[W*.86,H*.70],[W*.78,H*.18]]) drawPalm(x,y);
+}
+function drawPalm(x,y){ctx.fillStyle='#9b6438';ctx.fillRect(x-4,y-10,8,38);ctx.fillStyle='#55a84c';for(let i=0;i<7;i++){ctx.save();ctx.translate(x,y-8);ctx.rotate(i*Math.PI*2/7);ctx.beginPath();ctx.ellipse(20,0,24,7,0,0,7);ctx.fill();ctx.restore()}}
+
+function drawBoat(b,playerBoat=false){ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.angle);ctx.fillStyle='rgba(4,26,43,.22)';ctx.beginPath();ctx.ellipse(0,11,42,17,0,0,7);ctx.fill();ctx.fillStyle=playerBoat?'#ffeded':'#ffeded';ctx.beginPath();ctx.moveTo(44,0);ctx.lineTo(18,-19);ctx.lineTo(-32,-16);ctx.lineTo(-44,0);ctx.lineTo(-32,16);ctx.lineTo(18,19);ctx.closePath();ctx.fill();ctx.strokeStyle='#08213d';ctx.lineWidth=5;ctx.stroke();ctx.fillStyle=playerBoat?'#1c9bd1':b.color;ctx.beginPath();ctx.moveTo(38,0);ctx.lineTo(12,-13);ctx.lineTo(-25,-11);ctx.lineTo(-34,0);ctx.lineTo(-25,11);ctx.lineTo(12,13);ctx.closePath();ctx.fill();ctx.fillStyle='#08213d';ctx.fillRect(-4,-11,20,22);ctx.fillStyle='#63d7ed';ctx.fillRect(1,-8,11,16);ctx.fillStyle='#fff';ctx.fillRect(-33,-6,10,12);ctx.restore();}
+
+function update(dt){
+  if(state!=='race') return;
+  const throttle=keys.arrowup||keys.w||keys.up;
+  if(throttle||keys.arrowdown||keys.s) player.speed+= (throttle?260:-100)*dt; else player.speed-=38*dt;
+  player.speed=Math.max(0,Math.min(player.speed,310));
+  const turning=(keys.arrowleft||keys.a||keys.left?-1:0)+(keys.arrowright||keys.d||keys.right?1:0);
+  player.angle+=turning*(1.7+player.speed/260)*dt;
+  const boosting=(keys[' ']||keys.boost)&&player.boost>0&&player.speed>80;
+  if(boosting){player.speed=Math.min(390,player.speed+260*dt);player.boost-=32*dt}else player.boost=Math.min(100,player.boost+8*dt);
+  player.x+=Math.cos(player.angle)*player.speed*dt;player.y+=Math.sin(player.angle)*player.speed*dt;
+  // keep roughly in track area / world bounds
+  player.x=Math.max(30,Math.min(W-30,player.x));player.y=Math.max(30,Math.min(H-30,player.y));
+  // lap + checkpoint based on loop progress projected nearest track point
+  let best=1e9,bt=0;for(let i=0;i<200;i++){let t=i/200*Math.PI*2,p=trackPoint(t),d=(p.x-player.x)**2+(p.y-player.y)**2;if(d<best){best=d;bt=i/200}}
+  const old=player.progress;player.progress=bt;if(old>.82&&bt<.18)player.lap++;
+  if(player.lap>3){player.finish=true;state='finished';finishTime=Math.round(performance.now()/100);showFinish()}
+  ai.forEach((b,i)=>{b.progress+=b.speed*dt/1800;if(b.progress>1){b.progress-=1;b.lap++}let t=b.progress*Math.PI*2,p=trackPoint(t),a=trackAngle(t),lane=b.lane*Math.min(W,H)*.095;b.x=p.x-Math.sin(a)*lane;b.y=p.y+Math.cos(a)*lane;b.angle=a});
+  document.getElementById('lapNum').textContent=Math.min(player.lap,3);document.getElementById('speedNum').textContent=Math.round(player.speed*.75);document.getElementById('boostFill').style.width=player.boost+'%';
+  const racers=[player,...ai].map(r=>r.progress+(r.lap-1)*1);racers.sort((a,b)=>b-a);document.getElementById('place').textContent=racers.indexOf(racers.find(r=>r===player))+1;
+}
+
+function draw(){drawTrack();
+  // start/finish arch
+  const p=trackPoint(0),a=trackAngle(0);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(a);ctx.fillStyle='#fff';ctx.fillRect(-4,-Math.min(W,H)*.12,8,Math.min(W,H)*.24);ctx.restore();
+  ai.forEach(b=>drawBoat(b));drawBoat(player,true);
+}
+let last=performance.now();function loop(now){let dt=Math.min(.033,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+
+function startRace(){reset();document.getElementById('overlay').style.display='none';let n=3,c=document.getElementById('countdown');c.style.opacity=1;state='count';const run=()=>{c.textContent=n>0?n:'GO!';if(n-- >0)setTimeout(run,700);else{setTimeout(()=>{c.style.opacity=0;state='race'},550)}};run()}
+function showFinish(){const panel=document.querySelector('.panel'),overlay=document.getElementById('overlay');panel.querySelector('.eyebrow').textContent='Race Complete';panel.querySelector('h1').innerHTML='<span style="font-size:.8em">FINISH!</span>';panel.querySelector('.sub').textContent='WHAT A RUN — COASTAL CHAMPION';const btn=panel.querySelector('button');btn.textContent='Race Again';btn.onclick=startRace;overlay.style.display='grid'}
+document.getElementById('start').addEventListener('click',()=>{startRace()});
+</script>
+</body>
+</html>
