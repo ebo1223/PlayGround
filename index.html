@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Soccer Championship</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">SC</span><div><small>WORLD CUP</small><strong>CHAMPIONSHIP</strong></div></div>
+      <div class="round-pill"><span id="roundLabel">KICK OFF</span></div>
+      <button id="soundBtn" class="icon-btn" aria-label="Toggle sound">♪</button>
+    </header>
+
+    <section class="scoreboard" aria-label="Scoreboard">
+      <div class="team team-left"><div class="crest crest-red">A</div><strong id="leftName">ARG</strong></div>
+      <div class="score"><span id="leftScore">0</span><b>:</b><span id="rightScore">0</span></div>
+      <div class="team team-right"><strong id="rightName">BRA</strong><div class="crest crest-yellow">B</div></div>
+      <div class="clock" id="clock">00:00</div>
+    </section>
+
+    <section class="stadium">
+      <canvas id="game" aria-label="Soccer game field"></canvas>
+      <div class="goal goal-left"></div><div class="goal goal-right"></div>
+      <div id="kickoff" class="overlay show">
+        <div class="overlay-card"><small>EXHIBITION MATCH</small><h1>Soccer<br><em>Championship</em></h1><button id="startBtn" class="primary-btn">PLAY MATCH <span>›</span></button></div>
+      </div>
+      <div id="goalFlash" class="goal-flash">GOAL!</div>
+    </section>
+
+    <section class="controls">
+      <div class="control-block"><div class="control-copy"><strong>MOVE</strong><span>WASD / ARROWS</span></div><div class="dpad" id="dpad"><button data-key="ArrowUp" class="up">▲</button><button data-key="ArrowLeft" class="left">◀</button><button data-key="ArrowDown" class="down">▼</button><button data-key="ArrowRight" class="right">▶</button></div></div>
+      <button id="kickBtn" class="kick-btn"><span>⚽</span><strong>KICK</strong><small>SPACE</small></button>
+    </section>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
