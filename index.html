@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Quarter Mile</title>
+  <style>
+    :root { --orange:#ff5a18; --yellow:#ffc21c; --cyan:#40d7ff; --ink:#090b10; }
+    * { box-sizing:border-box; }
+    html,body { width:100%; height:100%; margin:0; overflow:hidden; background:#080a0e; }
+    body { font-family:"Arial Black",Impact,sans-serif; color:#fff; }
+    canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+    #hud { position:absolute; inset:0; pointer-events:none; }
+    .top { position:absolute; left:28px; right:28px; top:22px; display:flex; justify-content:space-between; align-items:flex-start; }
+    .brand { font-size:19px; letter-spacing:2px; font-style:italic; text-shadow:2px 3px 0 #000; }
+    .brand b { color:var(--orange); }
+    .track-info { text-align:right; font-family:monospace; font-weight:900; color:#aeb7c4; letter-spacing:1px; }
+    .track-info strong { display:block; color:#fff; font-family:"Arial Black",sans-serif; font-size:17px; }
+    #countdown { position:absolute; left:50%; top:22%; transform:translateX(-50%); font-size:clamp(76px,12vw,150px); font-style:italic; color:var(--yellow); text-shadow:7px 8px 0 #000,-2px -2px 0 #ff5a18; opacity:0; }
+    .bottom { position:absolute; left:28px; right:28px; bottom:24px; display:flex; align-items:end; justify-content:space-between; }
+    .gauges { display:flex; gap:14px; align-items:flex-end; }
+    .box { height:92px; min-width:132px; background:rgba(8,11,16,.82); border:2px solid rgba(255,255,255,.16); clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px); padding:10px 14px 8px; }
+    .label { color:#929baa; font-family:monospace; font-size:11px; letter-spacing:2px; }
+    .value { font-size:35px; line-height:44px; font-style:italic; }
+    .value span { color:#7f8998; font-size:13px; }
+    #gearBox { min-width:82px; text-align:center; border-color:var(--orange); }
+    #gear { color:var(--yellow); font-size:57px; line-height:58px; }
+    .controls { display:flex; gap:10px; pointer-events:auto; }
+    .control { width:112px; height:82px; border:1px solid #444b56; background:rgba(13,16,22,.9); color:#fff; font:900 14px Impact,sans-serif; letter-spacing:2px; clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px); touch-action:none; }
+    #throttle { border:2px solid var(--orange); background:linear-gradient(135deg,#ff6a21,#c62d09); }
+    .control:active,.control.active { transform:translateY(3px); filter:brightness(.72); }
+    #overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(5,7,10,.38); backdrop-filter:blur(3px); pointer-events:auto; }
+    .card { width:min(520px,calc(100% - 32px)); text-align:center; background:rgba(10,13,19,.94); border:1px solid #343a45; box-shadow:0 18px 60px #000; padding:30px 34px 28px; clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px); }
+    .eyebrow { color:var(--orange); letter-spacing:5px; font-size:12px; }
+    h1 { margin:7px 0 4px; font-size:clamp(46px,8vw,78px); line-height:.9; font-style:italic; letter-spacing:-3px; text-transform:uppercase; }
+    h1 i { color:var(--orange); font-style:italic; }
+    .sub { margin:14px 0 22px; color:#9ba4b1; font:700 13px monospace; }
+    #start { width:230px; height:58px; border:0; background:var(--yellow); color:#111; font:900 18px Impact,sans-serif; letter-spacing:3px; cursor:pointer; clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px); }
+    #start:hover { background:#fff0; background:var(--orange); color:#fff; }
+    .hidden { display:none !important; }
+    #progress { position:absolute; left:28px; right:28px; top:82px; height:3px; background:rgba(255,255,255,.12); }
+    #playerProgress,#opponentProgress { position:absolute; height:100%; width:0; }
+    #playerProgress { background:var(--cyan); }
+    #opponentProgress { background:var(--orange); opacity:.85; }
+    @media (max-width:700px) { .top{left:14px;right:14px}.bottom{left:14px;right:14px}.brand{font-size:14px}.track-info{font-size:10px}.track-info strong{font-size:13px}.box{height:74px;min-width:96px;padding:7px 9px}.value{font-size:26px;line-height:34px}#gearBox{min-width:58px}#gear{font-size:42px;line-height:43px}.gauges{gap:6px}.controls{gap:5px}.control{width:78px;height:65px;font-size:11px}.bottom{bottom:12px}.card{padding:24px 18px} }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="hud">
+    <div class="top"><div class="brand">NIGHT<br><b>STRIP</b></div><div class="track-info">QUARTER MILE<strong>1/4 MI · SATURDAY</strong></div></div>
+    <div id="progress"><div id="opponentProgress"></div><div id="playerProgress"></div></div>
+    <div id="countdown"></div>
+    <div class="bottom">
+      <div class="gauges">
+        <div class="box"><div class="label">SPEED</div><div class="value"><b id="speed">0</b> <span>MPH</span></div></div>
+        <div class="box"><div class="label">TIME</div><div class="value" id="time">0.00</div></div>
+        <div class="box" id="gearBox"><div class="label">GEAR</div><div id="gear">N</div></div>
+      </div>
+      <div class="controls"><button class="control" id="shift">SHIFT<br>▲</button><button class="control" id="throttle">THROTTLE</button></div>
+    </div>
+  </div>
+  <div id="overlay"><div class="card"><div class="eyebrow" id="eyebrow">SATURDAY NIGHT</div><h1 id="title">QUARTER<br><i>MILE</i></h1><div class="sub" id="sub">Hold throttle · Shift through five gears · Win the strip</div><button id="start">LAUNCH</button></div></div>
+<script>
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+let W,H,dpr,keys={},state='menu',last=0,countStart=0,raceStart=0;
+let player={x:.28,d:0,speed:0,gear:0,rpm:0},rival={x:.72,d:0,speed:0,gear:1};
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
+addEventListener('resize',resize);resize();
+function reset(){state='count';player={x:.28,d:0,speed:0,gear:0,rpm:.2};rival={x:.72,d:0,speed:0,gear:1};countStart=performance.now();raceStart=0;document.getElementById('overlay').classList.add('hidden');document.getElementById('countdown').style.opacity=1}
+function shift(){if(state==='race'&&player.gear<5&&player.speed>18){player.gear++;flashGear()}}
+function flashGear(){const g=document.getElementById('gear');g.animate([{transform:'scale(1)'},{transform:'scale(1.35)',color:'#40d7ff'},{transform:'scale(1)'}],{duration:180});}
+const throttle=document.getElementById('throttle'),shiftBtn=document.getElementById('shift');
+function setThrottle(v){keys.throttle=v;throttle.classList.toggle('active',v)}
+throttle.addEventListener('pointerdown',e=>{e.prevent();setThrottle(true)});throttle.addEventListener('pointerup',()=>setThrottle(false));throttle.addEventListener('pointerleave',()=>setThrottle(false));
+shiftBtn.addEventListener('pointerdown',e=>{e.prevent();shift();shiftBtn.classList.add('active')});shiftBtn.addEventListener('pointerup',()=>shiftBtn.classList.remove('active'));
+addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='ArrowUp'||e.code==='KeyW')setThrottle(true);if((e.code==='ArrowRight'||e.code==='KeyD'||e.code==='ShiftLeft'||e.code==='ShiftRight'||e.code===' ')&&!e.repeat)shift();if(e.code==='Enter'&&state==='menu')reset()});
+addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='ArrowUp'||e.code==='KeyW')setThrottle(false)});
+document.getElementById('start').addEventListener('click',reset);
+function endRace(won){state='end';document.getElementById('overlay').classList.remove('hidden');document.getElementById('eyebrow').textContent=won?'WIN LIGHT':'LOOSE LIGHT';document.getElementById('title').innerHTML=won?'YOU<br><i>WIN</i>':'YOU<br><i>LOST</i>';document.getElementById('sub').textContent=won?`Quarter mile: ${playerTime.toFixed(2)}s · ${player.speed.toFixed(0)} MPH`:`Quarter mile: ${rivalTime.toFixed(2)}s · Try another run`;document.getElementById('start').textContent='RACE AGAIN'}
+let playerTime=0,rivalTime=0;
+function update(t){let dt=Math.min((t-last)/1000,.035);last=t;
+  if(state==='count'){let n=(t-countStart)/1000;let cd=n<.8?'3':n<1.6?'2':n<2.4?'1':'GO';document.getElementById('countdown').textContent=cd;if(n>=3){state='race';raceStart=t;document.getElementById('countdown').style.opacity=0}}
+  if(state==='race'||state==='end'){
+    let throttleOn=keys.throttle||keys.ArrowUp||keys.KeyW||throttle.classList.contains('active');
+    if(state==='race'&&throttleOn){let max=[58,92,125,158,188,205][player.gear||1];let gearBoost=1-Math.abs(player.rpm-.72)*.35;player.speed=Math.min(max,player.speed+(9+player.gear*2.7)*gearBoost*dt);}
+    else if(state==='race') player.speed=Math.max(0,player.speed-22*dt);
+    if(state==='race'){
+      player.d+=player.speed*dt/223;
+      let rivalRate=(rival.gear<5&&rival.d>.12*rival.gear)?rival.gear++:rival.gear;
+      rival.speed=Math.min(205,rival.speed+(10+rival.gear*2.15)*dt);rival.d+=rival.speed*dt/223;
+      playerTime=(t-raceStart)/1000;rivalTime=rivalTime+(dt);
+      if(player.d>=1||rival.d>=1){if(player.d>=rival.d)endRace(true);else endRace(false)}
+    }
+  }
+  let inGear=player.gear||1;let gearTop=[58,92,125,158,188,205][inGear];player.rpm=Math.max(.15,Math.min(1,player.speed/gearTop));
+  document.getElementById('speed').textContent=Math.round(player.speed);document.getElementById('gear').textContent=player.gear===0?'N':player.gear;document.getElementById('time').textContent=(state==='race'||state==='end'?playerTime:0).toFixed(2);document.getElementById('playerProgress').style.width=(player.d*100)+'%';document.getElementById('opponentProgress').style.width=(rival.d*100)+'%';
+}
+function car(x,y,scale,red=false){ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
+  ctx.fillStyle='#0005';ctx.beginPath();ctx.ellipse(0,55,82,15,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=red?'#d8391d':'#d9dde2';ctx.beginPath();ctx.moveTo(-69,-10);ctx.quadraticCurveTo(-62,-42,-28,-49);ctx.lineTo(35,-49);ctx.quadraticCurveTo(63,-36,69,-10);ctx.lineTo(74,21);ctx.lineTo(58,44);ctx.lineTo(-58,44);ctx.lineTo(-74,21);ctx.closePath();ctx.fill();
+  ctx.fillStyle=red?'#7d140b':'#171e26';ctx.beginPath();ctx.moveTo(-36,-34);ctx.lineTo(29,-34);ctx.lineTo(50,-8);ctx.lineTo(-55,-8);ctx.closePath();ctx.fill();ctx.fillStyle='#07090d';ctx.fillRect(-59,-47,118,10);
+  ctx.fillStyle=red?'#ffb10a':'#ffda2d';ctx.fillRect(-61,14,12,7);ctx.fillRect(49,14,12,7);ctx.fillStyle='#111';ctx.fillRect(-70,31,26,13);ctx.fillRect(44,31,26,13);
+  ctx.fillStyle=red?'#ff7a38':'#6ec8ed';ctx.fillRect(-15,-9,30,2);ctx.restore();}
+function draw(t){update(t);ctx.clearRect(0,0,W,H);
+  let horizon=H*.38;let sky=ctx.createLinearGradient(0,0,0,horizon);sky.addColorStop(0,'#080b12');sky.addColorStop(.7,'#171c26');sky.addColorStop(1,'#e95e24');ctx.fillStyle=sky;ctx.fillRect(0,0,W,horizon);
+  ctx.fillStyle='#0b0d12';for(let i=0;i<18;i++){let x=(i*137-t*.018)% (W+160)-80;let h=35+(i%4)*18;ctx.fillRect(x,horizon-h,95,h)}
+  ctx.fillStyle='#ec4b1b';ctx.beginPath();ctx.arc(W*.5,horizon-18,15,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffd15a';ctx.beginPath();ctx.arc(W*.5,horizon-18,7,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#17191d';ctx.beginPath();ctx.moveTo(W*.04,horizon);ctx.lineTo(W*.96,horizon);ctx.lineTo(W*1.05,H);ctx.lineTo(-W*.05,H);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#272a2d';ctx.beginPath();ctx.moveTo(W*.46,horizon);ctx.lineTo(W*.54,horizon);ctx.lineTo(W*.59,H);ctx.lineTo(W*.41,H);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#aeb0ad';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(W*.5,horizon);ctx.lineTo(W*.5,H);ctx.stroke();
+  ctx.strokeStyle='#f3bd27';ctx.lineWidth=3;ctx.setLineDash([38,28]);ctx.beginPath();ctx.moveTo(W*.41,horizon);ctx.lineTo(W*.31,H);ctx.moveTo(W*.59,horizon);ctx.lineTo(W*.69,H);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#111319';ctx.fillRect(0,horizon, W,5);
+  let p=Math.max(player.d,rival.d);let z=Math.max(.55,1-p*.15);let px=W*(.31-player.d*.035)+Math.sin(t*.015)*1.5;let rx=W*(.69-rival.d*.035);
+  car(rx,H*.69-rival.d*H*.18,Math.max(.62,z*.78),true);car(px,H*.78-player.d*H*.20,Math.max(.72,z),false);
+  ctx.fillStyle='#fff';ctx.font='900 14px monospace';ctx.fillText('LEFT',px-18,H*.78+62);ctx.fillStyle='#ff7040';ctx.fillText('RIVAL',rx-22,H*.69-rival.d*H*.18+62);
+  requestAnimationFrame(draw)}
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>
