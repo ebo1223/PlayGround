@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Off-Road Rally</title>
+<style>
+:root{font-family:Impact,"Arial Black",system-ui,sans-serif;color:#fff}*{box-sizing:border-box}body{margin:0;overflow:hidden;background:#0c120f}canvas{display:block;width:100vw;height:100vh}.hud{position:absolute;inset:0;pointer-events:none}.topbar{height:96px;display:flex;align-items:flex-start;justify-content:space-between;padding:18px 28px;background:linear-gradient(180deg,rgba(5,10,8,.72),transparent)}.position{font-size:45px;font-style:italic;text-shadow:3px 4px #111}.position small{display:block;font-size:13px;letter-spacing:3px;color:#d2d9ce}.speed{position:absolute;right:28px;bottom:22px;width:170px;text-align:right}.speed .num{font-size:58px;line-height:.85;text-shadow:3px 4px #111}.speed small{font-size:14px;color:#d2d9ce}.bar{height:9px;margin-top:10px;border:2px solid #fff;background:linear-gradient(90deg,#e5ff31 var(--boost,70%),transparent 0)}.stage{position:absolute;left:50%;top:20px;transform:translateX(-50%);text-align:center}.stage b{font-size:19px;letter-spacing:3px}.progress{width:260px;height:7px;margin:8px auto;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.7)}.progress i{display:block;height:100%;width:var(--p,0%);background:#f9e64b}.time{font-size:29px;font-style:italic}.control{position:absolute;left:25px;bottom:25px;font-family:system-ui;font-size:12px;color:#e7eadf}.control kbd{display:inline-grid;place-items:center;width:28px;height:28px;margin:2px;border:1px solid #ddd;background:rgba(0,0,0,.35);font-weight:bold}.start,.finish{position:absolute;inset:0;display:grid;place-items:center;text-align:center;background:linear-gradient(90deg,rgba(8,15,12,.86),rgba(8,15,12,.3),rgba(8,15,12,.86));pointer-events:auto}.card{border-left:5px solid #eaff35;padding:18px 30px;background:rgba(7,11,9,.72);transform:skew(-3deg)}.card h1{margin:0;font-size:68px;line-height:.85;font-style:italic;text-transform:uppercase;text-shadow:4px 5px #111}.card p{font-family:system-ui;color:#ddd}.card button{pointer-events:auto;border:0;background:#eaff35;color:#111;padding:14px 34px;font:900 20px Impact,system-ui;letter-spacing:2px;cursor:pointer}.hidden{display:none}.toast{position:absolute;left:50%;top:150px;transform:translateX(-50%);font-size:34px;font-style:italic;color:#eaff35;text-shadow:3px 3px #111;opacity:0;transition:.25s}.toast.show{opacity:1}@media(max-width:700px){.topbar{padding:12px}.position{font-size:34px}.stage{top:70px}.progress{width:150px}.speed{right:12px}.card h1{font-size:46px}}
+</style></head>
+<body>
+<canvas id="game"></canvas>
+<div class="hud">
+ <div class="topbar"><div class="position">1<small>/ 6 PLACE</small></div><div class="stage"><b>STAGE 01 • COASTAL RUN</b><div class="progress"><i id="progress"></i></div><div class="time" id="time">00:00.000</div></div></div>
+ <div class="speed"><div class="num" id="speed">0</div><small>KM/H</small><div class="bar" id="boost"></div></div>
+ <div class="control"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><br>ARROWS / WASD • SHIFT BOOST</div>
+ <div class="toast" id="toast">CHECKPOINT!</div>
+</div>
+<div class="start" id="start"><div class="card"><h1>Off-Road Rally</h1><p>Coastal Run • 6 racers • 3 checkpoints</p><button id="go">START RALLY</button></div></div>
+<div class="finish hidden" id="finish"><div class="card"><h1 id="result">Stage Complete</h1><p id="summary"></p><button id="again">RACE AGAIN</button></div></div>
+<script>
+const c=document.getElementById('game'),x=c.getContext('2d');let W,H,DPR;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;c.width=W*DPR;c.height=H*DPR;c.style.width=W+'px';c.style.height=H+'px';x.setTransform(DPR,0,0,DPR,0,0)}addEventListener('resize',resize);resize();
+const keys={};addEventListener('keydown',e=>{keys[e.key.toLower?e.key.toLower():e.key]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault()});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+let running=false,startTime=0,distance=0,boost=70,steer=0,speed=0,shake=0,finished=false;const course=1100;const racers=[];for(let i=0;i<5;i++)racers.push({lane:(i-2)*0.62,z:Math.random()*-100,spd:48+Math.random()*14});
+function drawPoly(p,fill){x.fillStyle=fill;x.beginPath();x.moveTo(p[0][0],p[0][1]);for(let i=1;i<p.length;i++)x.lineTo(p[i][0],p[i][1]);x.closePath();x.fill()}
+function roadPoint(z,offset=0){let horizon=H*.30;let t=Math.max(0,Math.min(1,(z+200)/(course*.8)));let y=horizon+(H-horizon)*t*t;let curve=Math.sin((z+distance*.9)*.012)*95*t;let center=W*.5+curve+offset*(60+W*.15*t);return {x:center,y,w:40+W*.48*t}}
+function stripe(col){let horizon=H*.30;let grad=x.createLinearGradient(0,horizon,0,H);grad.addColorStop(0,'#98b85a');grad.addColorStop(1,col);x.fillStyle=grad;x.fillRect(0,0,W,H)}
+function draw(){stripe('#5d7f31');
+// sea and mountains
+x.fillStyle='#2d92a1';x.fillRect(0,H*.31,W,H*.12);x.fillStyle='#1e6e65';x.beginPath();x.moveTo(0,H*.31);for(let i=0;i<=W;i+=50)x.lineTo(i,H*.31-Math.sin(i*.02)*12-18);x.lineTo(W,H*.31);x.fill();
+// distant clouds
+x.fillStyle='rgba(255,255,255,.7)';for(let i=0;i<5;i++){let sx=(i*230-distance*.02)% (W+300)-100;x.fillRect(sx,H*.15+(i%2)*25,110,7)}
+// road quads
+for(let i=course;i>-80;i-=14){let z1=i-distance;let z2=i-14-distance;if(z1<-50||z2>course)continue;let p1=roadPoint(z1),p2=roadPoint(z2);let v=Math.floor(i/14)%2;
+ drawPoly([[p1.x-p1.w,p1.y],[p1.x+p1.w,p1.y],[p2.x+p2.w,p2.y],[p2.x-p2.w,p2.y]],v?'#77756b':'#88867a');
+ // shoulders
+ drawPoly([[p1.x-p1.w-24,p1.y],[p1.x-p1.w,p1.y],[p2.x-p2.w,p2.y],[p2.x-p2.w-24,p2.y]],v?'#e8e4cf':'#bc412e');
+ drawPoly([[p1.x+p1.w,p1.y],[p1.x+p1.w+24,p1.y],[p2.x+p2.w+24,p2.y],[p2.x+p2.w,p2.y]],v?'#e8e4cf':'#bc412e');
+ // tire ruts
+ x.fillStyle='rgba(40,38,32,.35)';x.fillRect(p1.x-p1.w*.46,p1.y,Math.max(2,p1.w*.07),Math.max(1,(p2.y-p1.y)));x.fillRect(p1.x+p1.w*.39,p1.y,Math.max(2,p1.w*.07),Math.max(1,(p2.y-p1.y)));
+}
+// scenery posts
+for(let i=50;i<course;i+=110){let z=i-distance;if(z>0&&z<850){let p=roadPoint(z);let side=i%220?1:-1;drawPoly([[p.x+side*(p.w+35),p.y],[p.x+side*(p.w+42),p.y],[p.x+side*(p.w+42),p.y-42],[p.x+side*(p.w+35),p.y-42]],'#f2ede0');x.fillStyle='#b02d25';x.fillRect(p.x+side*(p.w+35),p.y-42,7,17)}}
+// checkpoint banners
+[300,650,900].forEach(cp=>{let z=cp-distance;if(z>10&&z<850){let p=roadPoint(z);x.fillStyle='#ecebdc';x.fillRect(p.x-p.w*.78,p.y-75,p.w*1.56,8);x.fillStyle='#171a16';for(let k=-3;k<=3;k++){x.fillRect(p.x+k*p.w*.22,p.y-75,p.w*.11,8)}}});
+// rival cars
+racers.sort((a,b)=>b.z-a.z).forEach(r=>{let z=r.z-distance;if(z>40&&z<700){let p=roadPoint(z,r.lane);let s=.35+p.w/500*1.2;drawCar(p.x,p.y,s,r.lane>0?'#e64b25':'#eee')}});
+// player
+let carY=H*.78,carX=W*.5+steer*Math.min(W*.22,180);drawCar(carX,carY,1.25,'#f2e843',true);
+// dust
+if(running&&speed>35){x.fillStyle='rgba(190,170,125,.38)';for(let i=0;i<7;i++){let dx=(i*91+distance*3)%90-45;x.beginPath();x.arc(carX-dx,carY+35+(i%3)*9,18+i*3,0,7);x.fill()}}
+}
+function drawCar(cx,cy,s,color,player=false){x.save();x.translate(cx,cy);x.scale(s,s);x.translate(0,-8);let shadow='rgba(0,0,0,.35)';x.fillStyle=shadow;x.beginPath();x.ellipse(0,28,48,13,0,0,7);x.fill();x.fillStyle='#171917';x.fillRect(-42,8,14,35);x.fillRect(28,8,14,35);x.fillStyle=color;x.beginPath();x.moveTo(-38,20);x.lineTo(-29,-12);x.lineTo(-17,-35);x.lineTo(17,-35);x.lineTo(29,-12);x.lineTo(38,20);x.lineTo(31,32);x.lineTo(-31,32);x.closePath();x.fill();x.fillStyle='#24383a';x.beginPath();x.moveTo(-16,-30);x.lineTo(16,-30);x.lineTo(24,-12);x.lineTo(-24,-12);x.closePath();x.fill();x.fillStyle='rgba(255,255,255,.18)';x.fillRect(-22,-8,44,3);x.fillStyle='#111';x.fillRect(-31,24,62,7);if(player){x.fillStyle='#fff';x.fillRect(-27,24,8,5);x.fillRect(19,24,8,5)}x.restore()}
+function loop(ts){let dt=Math.min(.033,(ts-(loop.last||ts))/1000);loop.last=ts;if(running&&!finished){let left=keys.a||keys.arrowleft,right=keys.d||keys.arrowright,up=keys.w||keys.arrowup,down=keys.s||keys.arrowdown;steer+=( (left?-1:0)+(right?1:0)-steer*.2)*dt*3;steer=Math.max(-1.5,Math.min(1.5,steer));let accelerating=up;let boosting=(keys.shift||keys[' '])&&boost>1&&speed>35;if(accelerating)speed+= (boosting?78:50)*dt;else speed-=28*dt;if(down)speed-=65*dt;speed=Math.max(0,Math.min(boosting?205:172,speed));if(boosting){boost-=24*dt}else boost=Math.min(100,boost+10*dt);distance+=speed*dt*.9;shake=speed>140?Math.random()*2:0;racers.forEach(r=>r.z+=r.spd*dt*.9);if(distance>=course){finishRace()}let elapsed=(performance.now()-startTime)/1000;let m=Math.floor(elapsed/60),s=elapsed-m*60;document.getElementById('time').textContent=String(m).padStart(2,'0')+':'+s.toFixed(3).padStart(6,'0');document.getElementById('progress').style.width=Math.min(100,distance/course*100)+'%';document.getElementById('speed').textContent=Math.round(speed);document.getElementById('boost').style.setProperty('--boost',boost+'%')}
+ draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+function startRace(){document.getElementById('start').classList.add('hidden');document.getElementById('finish').classList.add('hidden');running=true;finished=false;distance=0;speed=0;boost=70;steer=0;startTime=performance.now()}
+function finishRace(){finished=true;running=false;let elapsed=(performance.now()-startTime)/1000;document.getElementById('finish').classList.remove('hidden');document.getElementById('result').textContent='Stage Complete';document.getElementById('summary').textContent='Coastal Run • Time '+elapsed.toFixed(3)+' seconds'}
+document.getElementById('go').onclick=startRace;document.getElementById('again').onclick=startRace;
+</script></body></html>
