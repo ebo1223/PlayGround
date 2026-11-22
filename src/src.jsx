@@ -10,7 +10,8 @@ addEventListener('keydown',x=>{keys[x.key.toLowerCase()]=true;if(['a','d','w','j
 addEventListener('keyup',x=>keys[x.key.toLowerCase()]=false);
 function toast(t){const q=$('toast');q.textContent=t;q.classList.remove('show');void q.offsetWidth;q.classList.add('show')}
 function attack(a,b,type){if(a.attack||a.hit||a.s<12)return;a.attack=22;a.s-=12;const dist=Math.abs(a.x-b.x);if(dist<110&&Math.abs(a.y-b.y)<70){b.hit=18;b.h-=type==='kick'?11:type==='grapple'?17:7;b.vx=(b.x>a.x?1:-1)*(type==='grapple'?12:7);toast(type==='grapple'?'SLAM!':type==='kick'?'HEAVY KICK':'HIT!')}}
-$('start').onclick=()=>{if(ended){p.h=e.h=100;p.x=260;e.x=690;time=90;ended=false}active=true;$('overlay').classList.add('hidden');toast('FIGHT!')};
+const startButton=$('start');
+if(startButton) startButton.onclick=()=>{if(ended){p.h=e.h=100;p.x=260;e.x=690;time=90;ended=false}active=true;$('overlay').classList.add('hidden');toast('FIGHT!')};
 
 function update(dt){if(!active)return;time-=dt;if(time<=0){time=0;end(p.h>=e.h?'KNOCKOUT • YOU WIN':'THE VIPER WINS')}
 p.s=Math.min(100,p.s+7*dt);e.s=Math.min(100,e.s+6*dt);
