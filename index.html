@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Tetris Blocks</title>
+  <style>
+    :root { --ink:#f7f7f2; --panel:#151515; --line:#343434; --yellow:#ffd84d; }
+    * { box-sizing:border-box; }
+    html,body { margin:0; width:100%; height:100%; overflow:hidden; background:#f3efe3; color:#171717; font-family:Arial, Helvetica, sans-serif; }
+    body { display:grid; place-items:center; }
+    .app { width:min(100vw, 880px); height:100dvh; max-height:760px; display:grid; grid-template-rows:86px 1fr; border-left:1px solid #d8d2c3; border-right:1px solid #d8d2c3; background:#f8f5ec; }
+    header { display:flex; align-items:center; justify-content:space-between; padding:16px 22px; border-bottom:2px solid #1a1a1a; }
+    .brand { display:flex; align-items:center; gap:13px; }
+    .logo { width:42px; height:42px; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(2,1fr); gap:3px; transform:rotate(-3deg); }
+    .logo i { background:#1b1b1b; border-radius:2px; }
+    .logo i:nth-child(1){grid-column:2}.logo i:nth-child(2){grid-column:1}.logo i:nth-child(3){grid-column:2}.logo i:nth-child(4){grid-column:3}
+    h1 { margin:0; font-size:29px; letter-spacing:-1.5px; line-height:1; }
+    .header-right { display:flex; align-items:center; gap:18px; }
+    .icon-btn { width:38px; height:38px; border:2px solid #1b1b1b; background:transparent; border-radius:50%; cursor:pointer; display:grid; place-items:center; font-size:16px; }
+    .icon-btn:hover { background:#1b1b1b; color:white; }
+    main { min-height:0; display:grid; grid-template-columns:1fr 220px; gap:20px; padding:18px 22px 22px; }
+    .board-wrap { min-height:0; display:grid; place-items:center; }
+    .board-shell { height:100%; aspect-ratio:10/20; max-width:100%; position:relative; background:#171717; border:8px solid #171717; box-shadow:8px 8px 0 #d8d2c3; }
+    canvas { display:block; width:100%; height:100%; }
+    .overlay { position:absolute; inset:0; display:none; place-items:center; background:rgba(20,20,20,.82); color:white; text-align:center; z-index:3; }
+    .overlay.show { display:grid; }
+    .overlay h2 { margin:0 0 8px; font-size:34px; }
+    .overlay p { margin:0 0 18px; color:#cfcfcf; }
+    .overlay button { border:0; background:var(--yellow); color:#171717; font-weight:800; padding:12px 18px; border-radius:4px; cursor:pointer; }
+    aside { display:flex; flex-direction:column; gap:12px; min-height:0; }
+    .card { border:2px solid #1b1b1b; background:#fffdf7; }
+    .card-title { height:32px; display:flex; align-items:center; padding:0 10px; border-bottom:2px solid #1b1b1b; font-size:11px; font-weight:900; letter-spacing:1.4px; }
+    .stats { display:grid; grid-template-columns:1fr 1fr; }
+    .stat { padding:10px 12px; }
+    .stat:first-child { border-right:1px solid #bcb6a7; }
+    .stat label { display:block; font-size:9px; font-weight:900; letter-spacing:1.2px; color:#777; margin-bottom:4px; }
+    .stat b { font-size:22px; }
+    .next { height:116px; display:grid; place-items:center; }
+    #nextCanvas { width:150px; height:96px; }
+    .controls { margin-top:auto; display:grid; grid-template-columns:repeat(3,58px); justify-content:center; gap:8px; }
+    .controls button { height:48px; border:2px solid #1b1b1b; background:#fffdf7; border-radius:5px; font-size:18px; font-weight:900; cursor:pointer; touch-action:none; }
+    .controls button:active { background:#ffd84d; transform:translateY(2px); }
+    .controls .wide { grid-column:span 3; height:42px; font-size:12px; letter-spacing:1px; }
+    @media (max-width:620px) { .app { border:0; grid-template-rows:68px 1fr; } header{padding:10px 12px}.brand h1{font-size:23px}.logo{width:36px;height:36px}.header-right{gap:8px}.icon-btn{width:34px;height:34px} main{grid-template-columns:1fr 128px; gap:8px; padding:8px} aside{gap:7px}.card-title{height:27px}.stat{padding:7px}.stat b{font-size:17px}.next{height:94px}#nextCanvas{width:112px;height:74px}.controls{grid-template-columns:repeat(3,38px);gap:5px}.controls button{height:42px}.controls .wide{height:38px}.board-shell{border-width:5px;box-shadow:4px 4px 0 #d8d2c3} }
+    @media (max-height:620px) { .app{grid-template-rows:58px 1fr}header{padding:7px 12px}.logo{height:34px;width:34px}.brand h1{font-size:21px}main{padding:6px 12px}.next{height:78px}.controls button{height:36px}.controls .wide{height:32px}.icon-btn{width:32px;height:32px} }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand"><div class="logo"><i></i><i></i><i></i><i></i></div><h1>Tetris Blocks</h1></div>
+      <div class="header-right"><button class="icon-btn" id="soundBtn" title="Sound">♪</button><button class="icon-btn" id="pauseBtn" title="Pause">Ⅱ</button></div>
+    </header>
+    <main>
+      <div class="board-wrap">
+        <div class="board-shell"><canvas id="board" width="300" height="600"></canvas><div class="overlay" id="overlay"><div><h2 id="overlayTitle">Paused</h2><p id="overlayText">Take your time.</p><button id="overlayBtn">Resume</button></div></div></div>
+      </div>
+      <aside>
+        <div class="card"><div class="card-title">NEXT</div><div class="next"><canvas id="nextCanvas" width="150" height="96"></canvas></div></div>
+        <div class="card"><div class="stats"><div class="stat"><label>SCORE</label><b id="score">0</b></div><div class="stat"><label>LEVEL</label><b id="level">1</b></div></div></div>
+        <div class="card"><div class="stats"><div class="stat"><label>LINES</label><b id="lines">0</b></div><div class="stat"><label>HIGH</label><b id="high">0</b></div></div></div>
+        <div class="controls" aria-label="Game controls">
+          <button data-action="left" aria-label="Move left">←</button><button data-action="rotate" aria-label="Rotate">↻</button><button data-action="right" aria-label="Move right">→</button>
+          <button class="wide" data-action="down">↓ DROP</button>
+        </div>
+      </aside>
+    </main>
+  </div>
+<script>
+const COLS=10, ROWS=20, SIZE=30;
+const board=document.getElementById('board'), ctx=board.getContext('2d');
+const nextCanvas=document.getElementById('nextCanvas'), nctx=nextCanvas.getContext('2d');
+const colors={I:'#2ec4b6',J:'#4d96ff',L:'#ff9f1c',O:'#ffd166',S:'#70c1b3',T:'#9b5de5',Z:'#ef476f'};
+const shapes={I:[[1,1,1,1]],J:[[1,0,0],[1,1,1]],L:[[0,0,1],[1,1,1]],O:[[1,1],[1,1]],S:[[0,1,1],[1,1,0]],T:[[0,1,0],[1,1,1]],Z:[[1,1,0],[0,1,1]]};
+let grid, piece, next, score, lines, level, high, paused=true, gameOver=false, dropTimer=0, last=0, sound=true;
+high=Number(localStorage.getItem('tetrisHigh')||0); document.getElementById('high').textContent=high;
+function bag(){ let types=Object.keys(shapes), out=[]; while(types.length){out.push(types.splice(Math.floor(Math.random()*types.length),1)[0])} return out; }
+let pieces=[];
+function randomPiece(){if(!pieces.length)pieces=bag();let type=pieces.pop();return{type,matrix:shapes[type].map(r=>[...r]),x:3,y:-1};}
+function reset(){grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));score=0;lines=0;level=1;pieces=[];piece=randomPiece();next=randomPiece();paused=false;gameOver=false;dropTimer=0;document.getElementById('overlay').classList.remove('show');updateStats();draw();}
+function updateStats(){document.getElementById('score').textContent=score;document.getElementById('lines').textContent=lines;document.getElementById('level').textContent=level;if(score>high){high=score;localStorage.setItem('tetrisHigh',high)}document.getElementById('high').textContent=high;}
+function collides(m=piece.matrix,px=piece.x,py=piece.y){for(let y=0;y<m.length;y++)for(let x=0;x<m[y].length;x++)if(m[y][x]){let gx=px+x,gy=py+y;if(gx<0||gx>=COLS||gy>=ROWS)return true;if(gy>=0&&grid[gy][gx])return true}return false}
+function merge(){piece.matrix.forEach((r,y)=>r.forEach((v,x)=>{if(v&&piece.y+y>=0)grid[piece.y+y][piece.x+x]=piece.type}))}
+function clearLines(){let cleared=0;for(let y=ROWS-1;y>=0;y--)if(grid[y].every(Boolean)){grid.splice(y,1);grid.unshift(Array(COLS).fill(null));cleared++;y++}if(cleared){lines+=cleared;score+=[0,100,300,500,800][cleared]*level;level=1+Math.floor(lines/10);updateStats();tone(180+cleared*60,.08)} }
+function spawn(){piece=next;piece.x=3;piece.y=-1;next=randomPiece();if(collides())endGame();}
+function endGame(){gameOver=true;paused=true;document.getElementById('overlayTitle').textContent='Game Over';document.getElementById('overlayText').textContent=`Score ${score}`;document.getElementById('overlayBtn').textContent='Play Again';document.getElementById('overlay').classList.add('show');tone(70,.25)}
+function move(dx,dy){if(paused||gameOver)return;if(!collides(piece.matrix,piece.x+dx,piece.y+dy)){piece.x+=dx;piece.y+=dy;draw();return true}if(dy>0){merge();clearLines();spawn();draw()}return false}
+function rotate(){if(paused||gameOver||piece.type==='O')return;let m=piece.matrix[0].map((_,i)=>piece.matrix.map(r=>r[i]).reverse());let old=piece.x;for(let k=0;k<5;k++){piece.x=old+(k%2?k>2?-k:k:0);if(!collides(m,piece.x,piece.y)){piece.matrix=m;draw();tone(300,.03);return}}}
+function hardDrop(){if(paused||gameOver)return;while(move(0,1)){}score+=2;updateStats();tone(90,.04)}
+function drawBlock(c,x,y,color,px=SIZE,py=SIZE){c.fillStyle=color;c.fillRect(x*px+1,y*py+1,px-2,py-2);c.fillStyle='rgba(255,255,255,.28)';c.fillRect(x*px+4,y*py+4,px-8,5);c.fillRect(x*px+4,y*py+4,5,py-8);c.fillStyle='rgba(0,0,0,.12)';c.fillRect(x*px+px-7,y*py+5,4,py-9)}
+function draw(){ctx.fillStyle='#171717';ctx.fillRect(0,0,300,600);ctx.strokeStyle='#292929';ctx.lineWidth=1;for(let x=0;x<=COLS;x++){ctx.beginPath();ctx.moveTo(x*SIZE,0);ctx.lineTo(x*SIZE,600);ctx.stroke()}for(let y=0;y<=ROWS;y++){ctx.beginPath();ctx.moveTo(0,y*SIZE);ctx.lineTo(300,y*SIZE);ctx.stroke()}grid.forEach((r,y)=>r.forEach((v,x)=>{if(v)drawBlock(ctx,x,y,colors[v])}));if(piece){piece.matrix.forEach((r,y)=>r.forEach((v,x)=>{if(v&&piece.y+y>=0)drawBlock(ctx,piece.x+x,piece.y+y,colors[piece.type])}));}
+ nctx.clearRect(0,0,nextCanvas.width,nextCanvas.height);let m=next.matrix, pw=25, ph=25;let w=m[0].length*pw,h=m.length*ph,ox=(150-w)/2,oy=(96-h)/2;nctx.save();nctx.translate(ox,oy);m.forEach((r,y)=>r.forEach((v,x)=>{if(v){nctx.fillStyle=colors[next.type];nctx.fillRect(x*pw+1,y*ph+1,pw-2,ph-2);nctx.fillStyle='rgba(255,255,255,.28)';nctx.fillRect(x*pw+4,y*ph+4,pw-8,4)}}));nctx.restore();}
+let audio;
+function tone(freq,dur){if(!sound)return;try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();let o=audio.createOscillator(),g=audio.createGain();o.frequency.value=freq;o.type='square';g.gain.setValueAtTime(.025,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+dur);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+dur)}catch(e){}}
+function loop(t=0){let delta=t-last;last=t;if(!paused&&!gameOver){dropTimer+=delta;if(dropTimer>Math.max(120,800-(level-1)*65)){move(0,1);dropTimer=0}}requestAnimationFrame(loop)}
+function togglePause(){if(gameOver)return;paused=!paused;document.getElementById('overlayTitle').textContent='Paused';document.getElementById('overlayText').textContent='Take your time.';document.getElementById('overlayBtn').textContent='Resume';document.getElementById('overlay').classList.toggle('show',paused);draw();}
+document.getElementById('pauseBtn').onclick=togglePause;
+document.getElementById('soundBtn').onclick=e=>{sound=!sound;e.currentTarget.style.opacity=sound?'1':'.35'};
+document.getElementById('overlayBtn').onclick=()=>gameOver?reset():togglePause();
+document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('pointerdown',e=>{e.preventPreventDefault?.();let a=b.dataset.action;if(a==='left')move(-1,0);if(a==='right')move(1,0);if(a==='rotate')rotate();if(a==='down')hardDrop()}));
+window.addEventListener('keydown',e=>{let k=e.key;if(['ArrowLeft','ArrowRight','ArrowDown','ArrowUp',' ','Escape','p','P'].includes(k))e.preventDefault();if(k==='ArrowLeft')move(-1,0);if(k==='ArrowRight')move(1,0);if(k==='ArrowDown')move(0,1);if(k==='ArrowUp'||k===' ')rotate();if(k==='Escape'||k.toLowerCase()==='p')togglePause()});
+reset();paused=true;document.getElementById('overlayTitle').textContent='Ready?';document.getElementById('overlayText').textContent='Classic blocks, clean lines.';document.getElementById('overlayBtn').textContent='Start Game';document.getElementById('overlay').classList.add('show');draw();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
