@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bowling Challenge</title>
+  <style>
+    :*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Inter,Arial,sans-serif;background:#071321;color:#fff} 
+    #game{position:relative;width:100vw;height:100vh;background:linear-gradient(180deg,#153b63 0%,#dce4df 55%,#7a5a3b 56%,#2b1a10 100%);overflow:hidden}
+    .ceiling{position:absolute;top:0;width:100%;height:11vh;background:linear-gradient(90deg,#102a43,#1b456b,#102a43);border-bottom:8px solid #18314d}.strip{position:absolute;top:11vh;bottom:0;left:50%;width:62vw;height:89vh;transform:translateX(-50%);background:linear-gradient(90deg,#8d6a42 0%,#d3ae77 8%,#b58b54 12%,#e3c48f 50%,#b58b54 88%,#d3ae77 92%,#8d6a42 100%);clip-path:polygon(33% 0,67% 0,100% 100%,0 100%);box-shadow:0 0 30px #0008}
+    .lane-lines{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 6.2%,rgba(86,55,25,.38) 6.2% 6.5%)}
+    .boards{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 2.7%,rgba(255,248,210,.18) 2.7% 2.85%)}
+    .dots{position:absolute;top:24%;left:50%;width:34%;height:8%;transform:translateX(-50%);background:radial-gradient(circle,#2b2015 0 3px,transparent 4px) 0 0/16.66% 50%;opacity:.8}
+    .header{position:absolute;z-index:20;top:20px;left:32px;right:32px;display:flex;justify-content:space-between;align-items:flex-start}.brand{font-size:28px;font-weight:900;letter-spacing:1px;text-shadow:0 3px 12px #000}.brand em{color:#ffc83d;font-style:normal}.stats{display:flex;gap:12px}.stat{min-width:92px;background:#071321dd;border:2px solid #ffffff22;border-radius:12px;text-align:center;padding:8px 12px;box-shadow:0 8px 20px #0005}.stat b{display:block;color:#ffc83d;font-size:21px}.stat span{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#cbd7e3}
+    #pins{position:absolute;z-index:8;left:50%;top:19%;width:260px;height:210px;transform:translateX(-50%)}.pin{position:absolute;width:25px;height:78px;border-radius:48% 48% 35% 35%;background:linear-gradient(90deg,#ddd,#fff 45%,#d9dfe2 70%,#aaa);border:1px solid #aeb7b9;box-shadow:5px 7px 8px #0006}.pin:before{content:"";position:absolute;top:10px;width:23px;height:11px;border-radius:50%;background:repeating-linear-gradient(0deg,#d92d31 0 4px,#fff 4px 7px);left:0}.pin:after{content:"";position:absolute;bottom:-7px;left:3px;width:19px;height:8px;border-radius:50%;background:#d6d6d4}
+    #ball{position:absolute;z-index:12;width:82px;height:82px;left:50%;bottom:8%;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle at 32% 28%,#6fa7ff 0,#2460b4 22%,#10367a 55%,#07172e 72%);box-shadow:12px 18px 14px #0007,inset -8px -10px 16px #061b3c}.holes{position:absolute;width:10px;height:10px;border-radius:50%;background:#050913;box-shadow:-16px 10px 0 #050913,8px 20px 0 #050913;left:22px;top:18px}
+    .aim{position:absolute;z-index:11;left:50%;bottom:20%;width:3px;height:34vh;transform-origin:bottom center;transform:translateX(-50%) rotate(0deg);opacity:.65;background:repeating-linear-gradient(0deg,#fff 0 7px,transparent 7px 14px);pointer-events:none}.arrow{position:absolute;bottom:-20px;left:-9px;width:21px;height:21px;border-radius:50%;background:#ffc83d;border:3px solid #fff}
+    .controls{position:absolute;z-index:30;bottom:24px;left:50%;transform:translateX(-50%);text-align:center}.power-wrap{width:260px;height:18px;background:#071321;border:3px solid #fff;border-radius:20px;overflow:hidden;box-shadow:0 5px 12px #0007}.power{height:100%;width:0;background:linear-gradient(90deg,#4dd69a,#ffc83d,#ef4d4d)}
+    button#bowl{margin-top:10px;border:0;border-radius:12px;background:#ffc83d;color:#182136;font-size:18px;font-weight:900;padding:12px 32px;box-shadow:0 6px 0 #a56d12,0 10px 18px #0005;cursor:pointer}.message{position:absolute;z-index:40;top:44%;left:50%;transform:translate(-50%,-50%);font-size:74px;font-weight:900;text-shadow:0 7px 0 #1b2b4a,0 12px 25px #000;opacity:0;transition:.2s}.message.show{opacity:1}
+    .scorecard{position:absolute;z-index:25;bottom:20px;right:24px;width:310px;display:grid;grid-template-columns:repeat(10,1fr);background:#fff;border:3px solid #15253a;border-radius:8px;overflow:hidden}.frame{height:58px;border-right:1px solid #aaa;color:#182136;text-align:center;font-size:12px}.frame:last-child{border:0}.frame span{display:block;height:22px;border-bottom:1px solid #aaa;font-weight:800}.frame b{display:block;font-size:18px;padding-top:5px}
+    .toast{position:absolute;z-index:45;top:100px;left:50%;transform:translateX(-50%);background:#071321d9;border:1px solid #ffffff22;border-radius:30px;padding:9px 18px;color:#dce8f2;font-size:13px}
+  </style>
+</head>
+<body><div id="game">
+  <div class="ceiling"></div><div class="strip"><div class="lane-lines"></div><div class="boards"></div><div class="dots"></div></div>
+  <div class="header"><div class="brand">BOWLING <em>CHALLENGE</em></div><div class="stats"><div class="stat"><span>Frame</span><b id="frame">1 / 10</b></div><div class="stat"><span>Roll</span><b id="roll">1</b></div><div class="stat"><span>Score</span><b id="score">0</b></div></div></div>
+  <div class="toast">Aim with ← → · Charge with Space · Hit pins!</div>
+  <div id="pins"></div><div class="aim" id="aim"><div class="arrow"></div></div><div id="ball"><div class="holes"></div></div>
+  <div class="message" id="message"></div>
+  <div class="controls"><div class="power-wrap"><div class="power" id="power"></div></div><button id="bowl">BOWL!</button></div>
+  <div class="scorecard" id="scorecard"></div>
+</div>
+<script>
+const pinEl=document.getElementById('pins'),ball=document.getElementById('ball'),aim=document.getElementById('aim'),power=document.getElementById('power'),message=document.getElementById('message');
+let frame=1,roll=1,score=0,frameScores=[[],[],[],[],[],[],[],[],[],[]],pins=[],aimAngle=0,charging=false,powerVal=0,powerDir=1,rolling=false,firstPins=0;
+const pinPos=[[130,5],[106,60],[154,60],[82,115],[130,115],[178,115],[58,170],[106,170],[154,170],[202,170]];
+function makePins(){pins=[];pinEl.innerHTML='';pinPos.forEach((p,i)=>{const e=document.createElement('div');e.className='pin';e.style.left=p[0]+'px';e.style.top=p[1]+'px';pinEl.appendChild(e);pins.push({el:e,x:p[0],y:p[1],down:false})})}
+makePins();
+function updateScore(){document.getElementById('frame').textContent=frame+' / 10';document.getElementById('roll').textContent=roll;document.getElementById('score').textContent=score;const sc=document.getElementById('scorecard');sc.innerHTML='';for(let i=0;i<10;i++){let f=document.createElement('div');f.className='frame';let a=frameScores[i];f.innerHTML='<span>'+ (i+1)+'</span><b>'+((a.length?a.join(' · '):'-'))+'</b>';sc.appendChild(f)}}updateScore();
+function showMsg(t){message.textContent=t;message.classList.add('show');setTimeout(()=>message.classList.remove('show'),900)}
+window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight',' '].includes(e.key))e.preventesDefault?.();if(e.key==='ArrowLeft')aimAngle=Math.max(-18,aimAngle-2);if(e.key==='ArrowRight')aimAngle=Math.min(18,aimAngle+2);aim.style.transform=`translateX(-50%) rotate(${aimAngle}deg)`;if(e.code==='Space'&&!rolling&&!charging){charging=true}});
+window.addEventListener('keyup',e=>{if(e.code==='Space'&&charging){charging=false;bowl()}});
+document.getElementById('bowl').addEventListener('mousedown',()=>{if(!rolling&&!charging){charging=true}});document.getElementById('bowl').addEventListener('mouseup',()=>{if(charging){charging=false;bowl()}});document.getElementById('bowl').addEventListener('touchstart',e=>{e.preventDefault();if(!rolling){charging=true}});document.getElementById('bowl').addEventListener('touchend',()=>{if(charging){charging=false;bowl()}});
+function animatePower(){if(charging){powerVal+=powerDir*2.2;if(powerVal>=100||powerVal<=0)powerDir*=-1;power.style.width=powerVal+'%';requestAnimationFrame(animatePower)}}animatePower();
+function bowl(){if(rolling)return;rolling=true;powerVal=Math.max(10, powerVal||55);let x=50,y=84,dx=Math.sin(aimAngle*Math.PI/180)*0.15*(0.7+powerVal/100),dy=-0.75*(0.55+powerVal/100);let hitCount=0;const timer=setInterval(()=>{x+=dx;y+=dy;ball.style.left=x+'%';ball.style.bottom=(100-y)+'%';ball.style.transform=`translateX(-50%) scale(${1-y/130+.15})`;
+  if(y<30){pins.forEach((p,i)=>{if(p.down)return;const px=(p.x+12)/260*100;let rel=(x-50)/62*100;const py=(p.y+55)/210*100;if(Math.abs(rel-px)<(pinPos[i][0]<80||pinPos[i][0]>180?10:7.5)&&y<25+(pinPos[i][1]/210*10)){if(Math.random()<0.82-.01*Math.abs(aimAngle)+powerVal/700){p.down=true;p.el.style.transform=`rotate(${i%2?'':'-'}72deg) translate(${i%2?25:-25}px,10px)`;p.el.style.transition='.35s';hitCount++}}});}
+  if(y<19){clearInterval(timer);finishRoll(hitCount)}},16)}
+function finishRoll(hitCount){let standing=pins.filter(p=>!p.down).length;let knocked=10-standing;if(roll===1)firstPins=knocked;
+  if(knocked===10){frameScores[frame-1]=[roll===1?'X':frameScores[frame-1][0]||firstPins,'/'];score+=10;if(roll===1)showMsg('STRIKE!');else showMsg('SPARE!')}else{frameScores[frame-1][roll-1]=knocked-(roll===1?0:firstPins);score+=knocked-(roll===1?0:firstPins)}
+  updateScore();setTimeout(()=>{if(knocked===10||roll===2){frame++;roll=1;firstPins=0;if(frame>10)endGame();else resetPins()}else roll++ ;updateScore();resetBall();rolling=false},1100)}
+function resetPins(){makePins()}function resetBall(){ball.style.left='50%';ball.style.bottom='8%';ball.style.transform='translateX(-50%)';powerVal=0;power.style.width='0';aimAngle=0;aim.style.transform='translateX(-50%) rotate(0deg)'}
+function endGame(){rolling=true;showMsg('FINAL SCORE '+score);document.getElementById('bowl').textContent='PLAY AGAIN';document.getElementById('bowl').onclick=()=>location.reload()}
+</script></body></html>
