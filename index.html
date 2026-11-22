@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Golf Champion</title>
+<style>
+*{box-sizing:border-box} :root{--ink:#10251f;--cream:#f6f2e7;--green:#1f7252;--lime:#b9dc72;--orange:#ff7b45}
+body{margin:0;background:#b9d6cf;font-family:Trebuchet MS,Arial,sans-serif;color:var(--ink);overflow:hidden}
+#app{height:100vh;display:grid;grid-template-rows:72px 1fr 92px;position:relative;background:linear-gradient(#cfe0dc,#afcfc2)}
+header{display:flex;align-items:center;justify-content:space-between;padding:0 28px;background:rgba(250,248,238,.94);border-bottom:1px solid #d8dfd2;z-index:4}
+.logo{font-family:Georgia,serif;font-size:24px;font-weight:900;letter-spacing:-1px}.logo span{color:#ea6541}
+.stats{display:flex;gap:8px}.pill{min-width:92px;text-align:center;border:1px solid #d7dfd3;border-radius:30px;padding:8px 12px;background:#fff;font-size:12px;font-weight:bold}.pill b{display:block;font-size:18px;margin-top:1px}
+main{position:relative;overflow:hidden;isolation:isolate}.course{position:absolute;inset:0}
+.sky{position:absolute;inset:0 0 40%;background:linear-gradient(#b9d6d3,#e9eee1)}
+.sun{position:absolute;width:80px;height:80px;border-radius:50%;right:9%;top:8%;background:#fff0a7;box-shadow:0 0 40px #fff1b2}
+.cloud{position:absolute;width:120px;height:24px;border-radius:30px;background:rgba(255,255,255,.72)}
+.cloud:before,.cloud:after{content:"";position:absolute;border-radius:50%;background:inherit}.cloud:before{width:52px;height:52px;left:18px;bottom:5px}.cloud:after{width:68px;height:68px;right:15px;bottom:2px}.c1{left:14%;top:11%}.c2{right:27%;top:19%;transform:scale(.65)}
+.hills{position:absolute;left:-5%;right:-5%;bottom:38%;height:25%;background:#9eb99d;clip-path:polygon(0 80%,8% 55%,16% 70%,27% 38%,38% 66%,49% 26%,60% 67%,71% 42%,82% 72%,92% 35%,100% 62%,100% 100%,0 100%)}
+.hills2{position:absolute;left:-5%;right:-5%;bottom:32%;height:18%;background:#769b82;clip-path:polygon(0 72%,12% 48%,24% 65%,36% 30%,50% 69%,64% 38%,78% 65%,91% 28%,100% 55%,100% 100%,0 100%)}
+.playfield{position:absolute;left:0;right:0;bottom:0;height:68%;background:linear-gradient(145deg,#73a86a,#4e8d5b);clip-path:polygon(0 20%,100% 0,100% 100%,0 100%)}
+.fairway{position:absolute;left:18%;bottom:-18%;width:64%;height:95%;background:linear-gradient(90deg,#84b06d,#a6c680 38%,#8caf68 70%,#72a05f);border-radius:48% 48% 10% 10%;transform:perspective(450px) rotateX(22deg);box-shadow:inset 0 0 40px rgba(39,91,56,.2)}
+.rough{position:absolute;left:3%;bottom:-12%;width:94%;height:80%;border-radius:50%;background:repeating-linear-gradient(90deg,transparent 0 20px,rgba(48,112,67,.08) 21px 23px)}
+.aim-line{position:absolute;height:3px;width:150px;background:rgba(255,255,255,.8);left:50%;bottom:19%;transform-origin:left center;z-index:3;border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.2);display:none}
+.aim-line:after{content:"";position:absolute;right:-7px;top:-5px;border-left:11px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent}
+.ball{position:absolute;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 18%,#f1f1ed 65%,#bfc6bc 100%);box-shadow:3px 5px 5px rgba(24,58,38,.35);left:50%;bottom:16%;transform:translate(-50%,50%);z-index:5}
+.ball.fly{transition:none}.shadow{position:absolute;width:27px;height:9px;border-radius:50%;background:rgba(22,61,40,.25);left:50%;bottom:14.5%;transform:translateX(-50%);z-index:2}
+.hole-wrap{position:absolute;left:67%;bottom:57%;z-index:4}.hole{width:31px;height:10px;border-radius:50%;background:#173e31;box-shadow:0 3px 0 #d8d4b6}.cup{position:absolute;width:31px;height:21px;border-radius:50% 50% 4px 4px;background:#173e31;left:0;top:-12px;clip-path:ellipse(50% 40% at 50% 100%)}.pole{position:absolute;width:4px;height:92px;background:#fffdf4;left:14px;bottom:5px;box-shadow:1px 0 #bec9b8}.flag{position:absolute;width:44px;height:27px;left:18px;bottom:57px;background:var(--orange);clip-path:polygon(0 0,100% 12%,74% 52%,100% 90%,0 100%)}
+.bunker{position:absolute;width:150px;height:48px;border-radius:50%;background:#dccd9d;box-shadow:inset 0 7px 12px #bba875;z-index:2}.b1{left:25%;bottom:31%;transform:rotate(-7deg)}.b2{right:15%;bottom:64%;transform:scale(.7)}
+.tree{position:absolute;width:15px;height:54px;background:#74543a;bottom:42%;z-index:2}.tree:before{content:"";position:absolute;width:82px;height:82px;border-radius:50%;background:#386d4e;left:-34px;bottom:28px}.tree:after{content:"";position:absolute;width:52px;height:52px;border-radius:50%;background:#59865b;left:-18px;bottom:42px}.t1{left:8%}.t2{left:12%;bottom:47%;transform:scale(.75)}.t3{right:8%;bottom:43%;transform:scale(.9)}
+.controls{background:rgba(247,246,238,.97);border-top:1px solid #d9ded4;display:grid;grid-template-columns:1fr minmax(260px,440px) 1fr;align-items:center;padding:10px 28px;z-index:8}
+.wind{font-size:13px;font-weight:bold}.wind span{display:inline-block;margin-right:8px;width:38px;height:38px;border-radius:50%;background:#edf1e7;text-align:center;line-height:38px;font-size:20px}
+.power-area{text-align:center}.power-label{display:flex;justify-content:space-between;font-size:11px;font-weight:bold;margin-bottom:5px}.meter{height:16px;border-radius:20px;background:#dde4d7;overflow:hidden;position:relative}.fill{height:100%;width:0%;background:linear-gradient(90deg,#62a865,#f2bf55,#f06b48);border-radius:20px}.actions{display:flex;justify-content:flex-end;gap:8px}button{border:0;border-radius:24px;padding:13px 18px;font-weight:bold;font-family:inherit;cursor:pointer}#strike{background:#153f32;color:white;min-width:130px}#strike:disabled{opacity:.5;cursor:not-allowed}#restart{background:#e7ebdf;color:#315443}
+.toast{position:absolute;left:50%;top:28%;transform:translate(-50%, -20px);background:#fffdf5;border-radius:30px;padding:12px 22px;font-family:Georgia,serif;font-weight:bold;font-size:19px;z-index:20;opacity:0;transition:.25s;box-shadow:0 8px 30px rgba(40,70,50,.15)}.toast.show{opacity:1;transform:translate(-50%,0)}
+.result{position:absolute;inset:0;background:rgba(17,44,35,.72);z-index:30;display:none;align-items:center;justify-content:center}.result.show{display:flex}.card{width:min(420px,calc(100% - 40px));background:#f9f7ed;border-radius:20px;padding:30px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25)}.card h1{font-family:Georgia,serif;font-size:38px;margin:0 0 8px}.card p{color:#607064}.card button{background:#ed7045;color:white;margin-top:8px}
+@media(max-width:700px){header{padding:0 12px}.logo{font-size:19px}.pill{min-width:60px;padding:6px}.stats .pill:nth-child(2){display:none}.controls{grid-template-columns:75px 1fr 120px;padding:8px 10px}.actions button{padding:12px}#restart{display:none}.hole-wrap{left:74%}.b2{display:none}}
+</style>
+</head>
+<body><div id="app">
+<header><div class="logo">Golf <span>Champion</span></div><div class="stats"><div class="pill">HOLE<b id="hole">1 / 9</b></div><div class="pill">PAR<b id="par">3</b></div><div class="pill">STROKES<b id="strokes">0</b></div></div></header>
+<main id="main"><div class="course"><div class="sky"></div><div class="sun"></div><div class="cloud c1"></div><div class="cloud c2"></div><div class="hills"></div><div class="hills2"></div><div class="playfield"></div><div class="rough"></div><div class="fairway"></div><div class="bunker b1"></div><div class="bunker b2"></div><div class="tree t1"></div><div class="tree t2"></div><div class="tree t3"></div><div class="hole-wrap"><div class="pole"></div><div class="flag"></div><div class="cup"></div><div class="hole"></div></div><div class="shadow" id="shadow"></div><div class="ball" id="ball"></div><div class="aim-line" id="aim"></div></div><div class="toast" id="toast">Nice shot!</div></main>
+<footer class="controls"><div class="wind"><span id="arrow">↗</span><b id="wind">1.2</b> mph</div><div class="power-area"><div class="power-label"><span>POWER</span><span id="club">DRIVER</span></div><div class="meter"><div class="fill" id="fill"></div></div></div><div class="actions"><button id="restart">RESET</button><button id="strike">HOLD & SWING</button></div></footer>
+<div class="result" id="result"><div class="card"><h1 id="resultTitle">Champion!</h1><p id="resultText"></p><button id="again">PLAY AGAIN</button></div></div>
+</div>
+<script>
+const $=s=>document.querySelector(s), ball=$('#ball'), aim=$('#aim'), fill=$('#fill'), strike=$('#strike');
+let hole=0, strokes=0, total=0, power=0, charging=false, animating=false, angle=-55, wind=0, locked=false;
+const holes=[
+ {par:3,dist:270,holeX:67,greens:'2.0'}, {par:4,dist:390,holeX:72,greens:'1.7'}, {par:3,dist:300,holeX:62,greens:'2.1'},
+ {par:5,dist:520,holeX:75,greens:'1.4'}, {par:4,dist:430,holeX:58,greens:'1.8'}, {par:3,dist:340,holeX:69,greens:'1.9'},
+ {par:4,dist:460,holeX:78,greens:'1.5'}, {par:5,dist:550,holeX:64,greens:'1.3'}, {par:4,dist:410,holeX:71,greens:'1.6'}
+];
+let ballX=50, ballY=16;
+function setup(){let h=holes[hole]; $('#hole').textContent=(hole+1)+' / 9'; $('#par').textContent=h.par; $('#strokes').textContent=strokes; wind=(Math.random()*2.4-.4).toFixed(1); $('#wind').textContent=Math.abs(wind); $('#arrow').textContent=wind>=0?'↗':'↖'; $('.hole-wrap').style.left=h.holeX+'%'; ballX=50; ballY=16; ball.style.left=ballX+'%';ball.style.bottom=ballY+'%'; $('#club').textContent='DRIVER'; aim.style.display='block'; aim.style.bottom=ballY+'%'; aim.style.left=ballX+'%'; aim.style.transform=`rotate(${angle}deg)`; fill.style.width='0%'; animating=false;locked=false}
+function toast(t){let e=$('#toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1300)}
+let loop;
+function charge(){if(animating||locked)return;charging=true;power=0;cancelAnimationFrame(loop);let dir=1; function tick(){power+=dir*1.35;if(power>=100){power=100;dir=-1}if(power<=0){dir=1}fill.style.width=power+'%';if(charging)loop=requestAnimationFrame(tick)}tick()}
+function swing(){if(!charging||animating)return;charging=false;cancelAnimationFrame(loop);let p=power;strike.disabled=true;animating=true;strokes++;$('#strokes').textContent=strokes;let h=holes[hole];let max=holes[hole].dist/5.2;let yards=p/100*max*1.15;let rad=(angle+90)*Math.PI/180;let drift=(wind*0.004+((Math.random()-.5)*.004*(100-p)));let dx=Math.cos(rad)*yards/12+wind*0.8;let dy=Math.sin(rad)*yards/12*(-1);let targetX=ballX+dx*.9, targetY=ballY+Math.abs(dy)*.55;if(p>78&&p<94)targetX+=0.5;if(p<35)targetY*=.7;targetX=Math.max(8,Math.min(92,targetX));targetY=Math.max(17,Math.min(65,targetY));fly(ballX,ballY,targetX,targetY,p)}
+function fly(x,y,tx,ty,p){let start=performance.now(),duration=850;function frame(now){let t=Math.min(1,(now-start)/duration),e=1-Math.pow(1-t,3);let cx=(x+tx)/2, cy=Math.max(y,ty)+18*(1-Math.sin(t*Math.PI));let bx=(1-t)*(1-t)*x+2*(1-t)*t*cx+t*t*tx,by=(1-t)*(1-t)*y+2*(1-t)*t*cy+t*t*ty;ball.style.left=bx+'%';ball.style.bottom=by+'%';$('#shadow').style.left=bx+'%';$('#shadow').style.bottom='14%';$('#shadow').style.transform=`translateX(-50%) scale(${1-t*.45})`;if(t<1)requestAnimationFrame(frame);else finish(tx,ty,p)}requestAnimationFrame(frame)}
+function finish(tx,ty,p){ballX=tx;ballY=ty;$('#shadow').style.left=tx+'%';aim.style.left=tx+'%';aim.style.bottom=ty+'%';let h=holes[hole],distToHole=Math.hypot(tx-h.holeX,(ty-57));let success=distToHole< (p>92?5.4:6.2);animating=false;strike.disabled=false;fill.style.width='0%';if(success){let phrase='Hole out!';let score=strokes;let rel=score-h.par;if(rel<=-2)phrase='Eagle!';else if(rel==-1)phrase='Birdie!';else if(rel==0)phrase='Par!';else if(rel==1)phrase='Bogey';toast(phrase);locked=true;setTimeout(nextHole,1700)}else{if(distToHole<14)toast('Close!');else if(p<25)toast('Good control');else toast('Nice distance')} }
+function nextHole(){total+=strokes;strokes=0;if(hole>=holes.length-1){$('#resultText').textContent=`Final score: ${total} strokes across 9 holes`;$('#result').classList.add('show')}else{hole++;setup()}}
+strike.addEventListener('pointerdown',e=>{e.prevent();charge()});strike.addEventListener('pointerup',()=>swing());strike.addEventListener('pointercancel',()=>swing());window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();if(!charging)charge();else swing()}});window.addEventListener('keyup',e=>{if(e.code==='Space'&&charging)swing()});
+$('#main').addEventListener('pointermove',e=>{if(animating)return;let r=$('#main').getBoundingClientRect();angle=Math.atan2(r.bottom-e.clientY,r.right-e.clientX)*180/Math.PI+180;if(angle<-120)angle=-120;if(angle>-20)angle=-20;aim.style.transform=`rotate(${angle}deg)`});
+$('#restart').onclick=()=>{strokes=0;setup()};$('#again').onclick=()=>{hole=0;strokes=0;total=0;$('#result').classList.remove('show');setup()};setup();
+</script>
+</body></html>
