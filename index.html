@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mahjong Solitaire</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">麻</span>
+        <div>
+          <h1>Mahjong <b>Solitaire</b></h1>
+          <p>Match every pair. Clear the board.</p>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="icon-button" id="soundBtn" aria-label="Toggle sound" title="Sound">♪</button>
+        <button class="icon-button" id="helpBtn" aria-label="How to play" title="How to play">?</button>
+      </div>
+    </header>
+
+    <section class="game-shell">
+      <aside class="sidebar">
+        <div class="stat-row">
+          <div class="stat"><span>Pairs left</span><strong id="pairsLeft">72</strong></div>
+          <div class="stat"><span>Moves</span><strong id="moves">0</strong></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="timer-panel">
+          <span class="timer-label">TIME</span>
+          <strong id="timer">00:00</strong>
+        </div>
+
+        <div class="toolbar">
+          <button id="shuffleBtn" class="tool"><span class="tool-icon">⟳</span><span>Shuffle</span><kbd id="shuffleCount">3</kbd></button>
+          <button id="hintBtn" class="tool"><span class="tool-icon">♧</span><span>Hint</span><kbd>H</kbd></button>
+          <button id="undoBtn" class="tool"><span class="tool-icon">↶</span><span>Undo</span><kbd>Z</kbd></button>
+        </div>
+
+        <button id="newBtn" class="new-game">New game</button>
+      </aside>
+
+      <section class="board-wrap">
+        <div class="board" id="board" aria-label="Mahjong board"></div>
+        <div class="toast" id="toast"></div>
+      </section>
+    </section>
+  </main>
+
+  <dialog id="helpDialog">
+    <button class="close" id="closeHelp" aria-label="Close">×</button>
+    <h2>How to play</h2>
+    <p>Remove tiles by matching two that share the same symbol. A tile is available only when:</p>
+    <ul>
+      <li>Nothing is stacked on top of it</li>
+      <li>The left side or right side is clear</li>
+    </ul>
+    <p>You can use Shuffle 3 times, and Undo to reverse your last match.</p>
+    <button class="new-game dialog-button" id="gotIt">Got it</button>
+  </dialog>
+
+  <dialog id="endDialog">
+    <div class="end-icon" id="endIcon">🏆</div>
+    <h2 id="endTitle">Board cleared!</h2>
+    <p id="endText">Beautiful work.</p>
+    <button class="new-game dialog-button" id="playAgain">Play again</button>
+  </dialog>
+
+  <script src="game.js"></script>
+</body>
+</html>
