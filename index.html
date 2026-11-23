@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Space Invaders</title>
+  <style>
+    :root { --ink:#b9ffcf; --cyan:#66f2ff; --pink:#ff5ca8; --panel:#07150f; }
+    * { box-sizing:border-box; }
+    html,body { width:100%; height:100%; margin:0; overflow:hidden; }
+    body {
+      background:#020705;
+      color:var(--ink);
+      font-family:"Courier New", monospace;
+      display:grid; place-items:center;
+      image-rendering:pixelated;
+    }
+    body:before {
+      content:""; position:fixed; inset:0; pointer-events:none; opacity:.18;
+      background:repeating-linear-gradient(0deg,transparent 0 3px,#7cffad 4px);
+      z-index:5;
+    }
+    #shell { width:min(94vw,920px); height:min(94vh,820px); display:flex; flex-direction:column; align-items:center; }
+    header { width:100%; height:56px; display:flex; justify-content:space-between; align-items:flex-end; padding:0 10px 8px; border-bottom:2px solid rgba(185,255,207,.35); }
+    .logo { font-weight:900; font-size:clamp(20px,3vw,34px); letter-spacing:.12em; text-shadow:0 0 16px #69ff9e; }
+    .stats { display:flex; gap:clamp(16px,4vw,44px); font-size:clamp(12px,1.7vw,18px); }
+    .stats b { display:block; margin-top:3px; color:#fff; text-align:right; }
+    #game { position:relative; flex:1; width:100%; min-height:0; margin-top:8px; overflow:hidden; border:1px solid rgba(185,255,207,.18); background:radial-gradient(circle at 50% 75%,#0c2117 0,#030906 48%,#020403 100%); }
+    canvas { width:100%; height:100%; display:block; }
+    #overlay { position:absolute; inset:0; display:grid; place-items:center; background:rgba(1,8,5,.78); backdrop-filter:blur(2px); text-align:center; z-index:3; }
+    #overlay.hidden { display:none; }
+    .card { max-width:520px; padding:24px; }
+    .card h1 { margin:0 0 12px; color:#fff; font-size:clamp(38px,8vw,78px); letter-spacing:.08em; text-shadow:5px 5px 0 #0e8c55,0 0 22px #83ffb1; }
+    .card p { margin:10px 0 22px; color:#9acaaa; line-height:1.6; }
+    button { border:2px solid #9effbb; background:#092318; color:#dffff0; font:900 16px "Courier New",monospace; letter-spacing:.12em; padding:14px 24px; cursor:pointer; box-shadow:0 0 18px rgba(102,255,153,.18); }
+    button:hover { background:#0f3a27; transform:translateY(-2px); }
+    .controls { height:50px; display:flex; align-items:center; justify-content:center; gap:28px; color:#70917a; font-size:12px; }
+    kbd { color:#d9ffe6; border:1px solid #4e7c5d; padding:5px 7px; margin-right:5px; }
+    #touch { display:none; position:absolute; left:12px; right:12px; bottom:12px; justify-content:space-between; z-index:2; pointer-events:none; }
+    #touch div { display:flex; gap:8px; }
+    #touch button { width:58px; height:58px; padding:0; border-radius:50%; opacity:.72; pointer-events:auto; }
+    @media (pointer:coarse),(max-width:700px) { #touch { display:flex; } .controls{display:none;} }
+  </style>
+</head>
+<body>
+  <main id="shell">
+    <header>
+      <div class="logo">INVADERS</div>
+      <div class="stats"><div>SCORE<b id="score">00000</b></div><div>HI-SCORE<b id="hi">00000</b></div><div>LIVES<b id="lives">3</b></div></div>
+    </header>
+    <section id="game">
+      <canvas id="canvas"></canvas>
+      <div id="overlay"><div class="card"><h1 id="title">SPACE<br>INVADERS</h1><p id="message">Defend Earth from the alien formation</p><button id="start">START GAME</button></div></div>
+      <div id="touch"><div><button data-key="ArrowLeft">◀</button><button data-key="ArrowRight">▶</button></div><button data-key="Space">●</button></div>
+    </section>
+    <div class="controls"><span><kbd>←</kbd><kbd>→</kbd> MOVE</span><span><kbd>SPACE</kbd> FIRE</span><span><kbd>P</kbd> PAUSE</span></div>
+  </main>
+<script>
+const canvas=document.queryElementById('canvas'),ctx=canvas.getContext('2d'),overlay=document.getElementById('overlay');
+const scoreEl=document.getElementById('score'),hiEl=document.getElementById('hi'),livesEl=document.getElementById('lives');
+let W=800,H=600,scale=1,keys={},running=false,paused=false,score=0,hi=+(localStorage.invadersHi||0),lives=3,last=0,shotDelay=0;
+let player,invaders=[],bullets=[],enemyBullets=[],barriers=[],particles=[],stars=[],ufo=null,ufoTimer=700;
+hiEl.textContent=pad(hi); 
+function pad(n){return String(n).padStart(5,'0')}
+function resize(){const r=canvas.getBoundingClientRect(); W=r.width;H=r.height; canvas.width=W*devicePixelRatio;canvas.height=H*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
+addEventListener('resize',resize);
+function reset(){score=0;lives=3;player={x:W/2,y:H-48,w:46,h:24,speed:330};bullets=[];enemyBullets=[];particles=[];barriers=[];buildInvaders();buildBarriers();stars=Array.from({length:90},()=>({x:Math.random()*W,y:Math.random()*H,s:Math.random()*1.4+.2,a:Math.random()}));updateHUD()}
+function buildInvaders(){invaders=[];const cols=11,rows=5,gap=Math.min(52,W*.055),start=W/2-(cols-1)*gap/2;for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)invaders.push({x:start+c*gap,y:82+r*36,w:31,h:21,r,c,alive:true,phase:(r+c)%2})}
+let formation={x:0,dir:1,speed:18};
+function buildBarriers(){barriers=[];[.18,.41,.59,.82].forEach(p=>{for(let y=0;y<4;y++)for(let x=0;x<7;x++){if((y===0&&(x===0||x===6))||y===3&&x>1&&x<5)continue;barriers.push({x:W*p+x*6-21,y:H-135+y*6,w:6,h:6,alive:true})}})}
+function updateHUD(){scoreEl.textContent=pad(score);hiEl.textContent=pad(Math.max(score,hi));livesEl.textContent='♥'.repeat(lives)}
+function start(){if(!running){reset();running=true;paused=false;overlay.classList.add('hidden');last=performance.now();requestAnimationFrame(loop)}else{reset();paused=false;overlay.classList.add('hidden')}}
+document.getElementById('start').onclick=start;
+addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();keys[e.code]=true;if(e.code==='KeyP'&&running)togglePause();if(e.code==='Enter'&&!running)start()});
+addEventListener('keyup',e=>keys[e.code]=false);
+document.querySelectorAll('#touch button').forEach(b=>{const k=b.dataset.key;b.onpointerdown=e=>{e.preventDefault();keys[k]=true};b.onpointerup=b.onpointercancel=()=>keys[k]=false});
+function togglePause(){paused=!paused;if(paused){document.getElementById('title').innerHTML='PAUSED';document.getElementById('message').textContent='Press P to resume';document.getElementById('start').textContent='RESUME';overlay.classList.remove('hidden')}else overlay.classList.add('hidden')}
+document.getElementById('start').onclick=()=>paused?togglePause():start();
+function loop(now){if(!running)return;const dt=Math.min((now-last)/1000,.035);last=now;if(!paused)update(dt);draw();requestAnimationFrame(loop)}
+function rectHit(a,b){return a.x-a.w/2<b.x+b.w/2&&a.x+a.w/2>b.x-b.w/2&&a.y-a.h/2<b.y+b.h/2&&a.y+a.h/2>b.y-b.h/2}
+function update(dt){if(keys.ArrowLeft||keys.KeyA)player.x-=player.speed*dt;if(keys.ArrowRight||keys.KeyD)player.x+=player.speed*dt;player.x=Math.max(25,Math.min(W-25,player.x));shotDelay-=dt;if(keys.Space||keys.KeyJ){if(shotDelay<=0){bullets.push({x:player.x,y:player.y-18,w:4,h:14,vy:-520});shotDelay=.38}} 
+  let alive=invaders.filter(i=>i.alive),left=Math.min(...alive.map(i=>i.x-i.w/2),Infinity),right=Math.max(...alive.map(i=>i.x+i.w/2),-Infinity);formation.speed=18+alive.length===0?0:(55-alive.length)*1.7;let dx=formation.dir*formation.speed*dt,leftEdge=left+dx,rightEdge=right+dx;if(leftEdge<18||rightEdge>W-18){formation.dir*=-1;invaders.forEach(i=>i.y+=18)}else invaders.forEach(i=>i.x+=dx);
+  if(alive.length&&Math.random()<dt*(.7+alive.length*-0.006)){let lowest=[];for(let c=0;c<11;c++){let col=alive.filter(i=>i.c===c).sort((a,b)=>b.y-a.y)[0];if(col)lowest.push(col)}let s=lowest[Math.floor(Math.random()*lowest.length)];enemyBullets.push({x:s.x,y:s.y+12,w:5,h:14,vy:190})}
+  ufoTimer-=dt;if(ufoTimer<=0&&!ufo){ufo={x:-30,y:48,w:48,h:20,vy:0,vx:75};ufoTimer=Math.random()*500+650}if(ufo){ufo.x+=ufo.vx*dt;if(ufo.x>W+40){ufo=null;ufoTimer=700}} 
+  bullets.forEach(b=>b.y+=b.vy*dt);enemyBullets.forEach(b=>b.y+=b.vy*dt);bullets=bullets.filter(b=>b.y>-20);enemyBullets=enemyBullets.filter(b=>b.y<H+20);
+  bullets.forEach(b=>{invaders.forEach(i=>{if(i.alive&&rectHit({x:b.x,y:b.y,w:b.w,h:b.h},{x:i.x,y:i.y,w:i.w,h:i.h})) {i.alive=false;b.dead=true;score+=i.r===0?30:i.r<3?20:10;burst(i.x,i.y,i.r===0?'#ff79bd':'#78ffc1');updateHUD()}});if(ufo&&rectHit({x:b.x,y:b.y,w:b.w,h:b.h},{x:ufo.x,y:ufo.y,w:ufo.w,h:ufo.h})) {b.dead=true;score+=150;burst(ufo.x,ufo.y,'#ffdf70');ufo=null;ufoTimer=700;updateHUD()} });
+  bullets=bullets.filter(b=>!b.dead);enemyBullets.forEach(b=>barrierHit(b));bullets.forEach(b=>barrierHit(b));barrierHit({x:player.x,y:player.y,w:player.w,h:player.h,enemy:false});
+  enemyBullets.forEach(b=>{if(rectHit(b,{x:player.x,y:player.y,w:player.w,h:player.h})){b.dead=true;loseLife()}});enemyBullets=enemyBullets.filter(b=>!b.dead);
+  barriers=barriers.filter(p=>p.alive);particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt});particles=particles.filter(p=>p.life>0);
+  if(alive.length===0)waveWon();if(alive.some(i=>i.y+i.h/2>player.y-30))loseLife(true)
+}
+function barrierHit(o){barriers.forEach(p=>{if(p.alive&&rectHit(o,p)){p.alive=false;o.dead=true}})}
+function burst(x,y,c){for(let n=0;n<12;n++){particles.push({x,y,vx:(Math.random()-5)*16+ (Math.random()*180-90),vy:(Math.random()-5)*18+(Math.random()*-100),life:Math.random()*0.5+.25,c})}}
+function loseLife(all=false){if(!running)return;lives--;updateHUD();burst(player.x,player.y,'#66f2ff');if(lives<=0){gameOver()}else{bullets=[];enemyBullets=[];player.x=W/2;if(all)invaders.forEach(i=>i.y-=30)}}
+function gameOver(){running=false;hi=Math.max(hi,score);localStorage.invadersHi=hi;document.getElementById('title').textContent='GAME OVER';document.getElementById('message').textContent='Final score '+pad(score);document.getElementById('start').textContent='PLAY AGAIN';overlay.classList.remove('hidden')}
+function waveWon(){score+=100;updateHUD();buildInvaders();enemyBullets=[];player.x=W/2}
+function pixelAlien(i){const r=i.r%3;c=(i.r===0?'#ff79bd':i.r<3?'#66f2ff':'#9cff85');ctx.fillStyle=c;ctx.fillRect(i.x-15,i.y-8,30,16);ctx.clearRect(i.x-11,i.y-4,6,5);ctx.clearRect(i.x+5,i.y-4,6,5);ctx.fillStyle='#06100b';ctx.fillRect(i.x-9,i.y-2,3,3);ctx.fillRect(i.x+6,i.y-2,3,3);ctx.fillStyle=c;ctx.fillRect(i.x-18,i.y-3,3,12);ctx.fillRect(i.x+15,i.y-3,3,12);ctx.fillRect(i.x-10,i.y+8,6,3);ctx.fillRect(i.x+4,i.y+8,6,3)}
+function draw(){ctx.clearRect(0,0,W,H);ctx.fillStyle='#020705';ctx.fillRect(0,0,W,H);stars.forEach(s=>{ctx.globalAlpha=.25+.35*Math.abs(Math.sin(s.a+performance.now()/3000));ctx.fillStyle='#aaffc1';ctx.fillRect(s.x,s.y,s.s,s.s)});ctx.globalAlpha=1;
+  invaders.forEach(i=>{if(i.alive)pixelAlien(i)});if(ufo){ctx.fillStyle='#ffdf70';ctx.fillRect(ufo.x-24,ufo.y-7,48,14);ctx.fillStyle='#06100b';ctx.fillRect(ufo.x-14,ufo.y-11,28,7);ctx.fillStyle='#ffdf70';ctx.fillRect(ufo.x-17,ufo.y+7,34,5)}
+  ctx.fillStyle='#75ff9d';ctx.beginPath();ctx.moveTo(player.x-23,player.y+12);ctx.lineTo(player.x-17,player.y+3);ctx.lineTo(player.x-8,player.y+3);ctx.lineTo(player.x-8,player.y-8);ctx.lineTo(player.x-3,player.y-8);ctx.lineTo(player.x-3,player.y-18);ctx.lineTo(player.x+3,player.y-18);ctx.lineTo(player.x+3,player.y-8);ctx.lineTo(player.x+8,player.y-8);ctx.lineTo(player.x+8,player.y+3);ctx.lineTo(player.x+17,player.y+3);ctx.lineTo(player.x+23,player.y+12);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#dffff0';bullets.forEach(b=>ctx.fillRect(b.x-b.w/2,b.y-b.h/2,b.w,b.h));ctx.fillStyle='#ff5ca8';enemyBullets.forEach(b=>ctx.fillRect(b.x-b.w/2,b.y-b.h/2,b.w,b.h));ctx.fillStyle='#35a96a';barriers.forEach(p=>{if(p.alive)ctx.fillRect(p.x,p.y,p.w,p.h)});particles.forEach(p=>{ctx.globalAlpha=Math.min(1,p.life*2);ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,3,3)});ctx.globalAlpha=1;
+  ctx.fillStyle='rgba(185,255,207,.24)';ctx.fillRect(0,H-28,W,1);ctx.font='12px Courier New';ctx.fillText('EARTH DEFENSE LINE',12,H-10)
+}
+resize();reset();draw();
+</script>
+</body>
+</html>
