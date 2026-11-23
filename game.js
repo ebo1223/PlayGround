@@ -1,0 +1,35 @@
+const types=[
+ {name:'Corner Cafe',type:'cafe',level:2,base:480,cost:6000,icon:'☕'},
+ {name:'Metro Offices',type:'office',level:3,base:820,cost:9500,icon:'▥'},
+ {name:'Grand Mart',type:'store',level:1,base:650,cost:7500,icon:'▤'},
+ {name:'Downtown Hotel',type:'hotel',level:0,base:1200,cost:18000,icon:'♜'},
+ {name:'Creative Labs',type:'office',level:0,base:900,cost:14000,icon:'▦'},
+ {name:'Riverside Plaza',type:'construction',level:0,base:1600,cost:26000,icon:'🏗'}
+];
+let state={cash:12500,rep:120,day:1,owned:[0,1,2],properties:types.map(p=>({...p}))};
+try{const s=JSON.parse(localStorage.getItem('businessTycoonSave'));if(s&&s.properties)state=s}catch(e){}
+const $=s=>document.querySelector(s), money=n=>'$'+Math.round(n).toLocaleString();
+function income(){return state.properties.reduce((sum,p,i)=>state.owned.includes(i)?sum+p.base*(1+p.level*.32):sum,0)}
+function render(){
+ $('#cash').textContent=money(state.cash);$('#rep').textContent=state.rep;$('#day').textContent=state.day;
+ $('#income').textContent='+$'+Math.round(income()).toLocaleString();$('#ownedCount').textContent=state.owned.length;
+ const grid=$('#cityGrid');grid.innerHTML='';
+ state.properties.forEach((p,i)=>{const owned=state.owned.includes(i);const el=document.createElement('div');el.className='property'+(owned?'':' locked');el.innerHTML=`<div class="building-art"><div class="building ${p.type}"></div></div><div class="level">${owned?'LV '+p.level:'LOT '+(i+1)}</div>${owned?'':`<div class="lock">AVAILABLE<br><span>$${p.cost.toLocaleString()}</span></div>`}<div class="property-info"><div><h3>${p.name}</h3><p>${owned?'PRODUCING':'COMMERCIAL LOT'}</p></div>${owned?`<strong>+$${Math.round(p.base*(1+p.level*.32)).toLocaleString()}</strong>`:''}</div>`;el.onclick=()=>openProperty(i);grid.appendChild(el)});
+ renderBusinesses();renderMarket();renderMissions();
+}
+function openProperty(i){const p=state.properties[i],owned=state.owned.includes(i);let html=`<h2>${p.name}</h2><p>${owned?'Daily earnings: '+money(p.base*(1+p.level*.32)):'Acquire this property to expand your commercial empire.'}</p>`;if(owned)html+=`<p>LEVEL ${p.level} · UPGRADE COST ${money(p.cost*.65*(p.level+1))}</p><button class="upgrade-btn" id="modalAction">UPGRADE PROPERTY</button>`;else html+=`<p>Purchase cost: ${money(p.cost)}</p><button class="upgrade-btn" id="modalAction">BUY PROPERTY</button>`;$('#modalBody').innerHTML=html;$('#modal').classList.remove('hidden');$('#modalAction').onclick=()=>{if(owned)upgrade(i);else buy(i);$('#modal').classList.add('hidden')};}
+function buy(i){const p=state.properties[i];if(state.cash<p.cost)return toast('Not enough cash');state.cash-=p.cost;state.owned.push(i);state.rep+=15;toast(p.name+' acquired!');render()}
+function upgrade(i){const p=state.properties[i],cost=p.cost*.65*(p.level+1);if(state.cash<cost)return toast('Not enough cash');state.cash-=cost;p.level++;state.rep+=8;toast(p.name+' upgraded to level '+p.level);render()}
+function renderBusinesses(){const el=$('#businessList');el.innerHTML='';state.owned.forEach(i=>{const p=state.properties[i];const row=document.createElement('div');row.className='biz-row';row.innerHTML=`<div class="biz-icon">${p.icon}</div><div class="biz-info"><h3>${p.name}</h3><p>LEVEL ${p.level} · DAILY PROFIT ${money(p.base*(1+p.level*.32))}</p></div><div class="biz-actions"><button class="upgrade-btn">UPGRADE · ${money(p.cost*.65*(p.level+1))}</button></div>`;row.querySelector('button').onclick=()=>upgrade(i);el.appendChild(row)})}
+const market=[{name:'Local Supply Co.',desc:'Boost retail income by 10% for 5 days',cost:2400,icon:'▥'},{name:'Marketing Agency',desc:'Gain 25 reputation immediately',cost:1800,icon:'◉'},{name:'City Consultant',desc:'Instant +$8,000 consulting bonus',cost:5200,icon:'◆'}];
+function renderMarket(){const el=$('#marketList');el.innerHTML='';market.forEach((m,i)=>{const r=document.createElement('div');r.className='market-row';r.innerHTML=`<div class="market-icon">${m.icon}</div><div class="market-info"><h3>${m.name}</h3><p>${m.desc}</p></div><button class="buy-btn">BUY · ${money(m.cost)}</button>`;r.querySelector('button').onclick=()=>{if(state.cash<m.cost)return toast('Not enough cash');state.cash-=m.cost;if(i===0){state.properties.forEach(p=>p.base*=1.1)}if(i===1)state.rep+=25;if(i===2)state.cash+=8000;toast('Investment activated');render()};el.appendChild(r)})}
+const missions=[{name:'First Expansion',desc:'Own 4 properties',reward:1500,check:()=>state.owned.length>=4},{name:'Local Legend',desc:'Reach 150 reputation',reward:2000,check:()=>state.rep>=150},{name:'Daily Profit',desc:'Earn $3,500 per day',reward:2500,check:()=>income()>=3500}];
+let claimed=[];try{claimed=JSON.parse(localStorage.getItem('businessTycoonClaimed'))||[]}catch(e){}
+function renderMissions(){const el=$('#missionList');el.innerHTML='';missions.forEach((m,i)=>{const complete=m.check(),done=claimed.includes(i);const r=document.createElement('div');r.className='mission-row'+(done?' done':'');r.innerHTML=`<div class="mission-check">${done?'✓':''}</div><div class="mission-info"><h3>${m.name}</h3><p>${m.desc}</p></div><div class="reward">${done?'CLAIMED':'+ '+money(m.reward)}</div>`;if(complete&&!done)r.onclick=()=>{claimed.push(i);state.cash+=m.reward;localStorage.setItem('businessTycoonClaimed',JSON.stringify(claimed));toast('Mission reward claimed: '+money(m.reward));render()};el.appendChild(r)});$('#missionCount').textContent=missions.filter((m,i)=>m.check()&&!claimed.includes(i)).length}
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(el.timer);el.timer=setTimeout(()=>el.classList.remove('show'),1800)}
+$('#nextDay').onclick=()=>{const earned=income();state.cash+=earned;state.day++;const news=['Street traffic is at a record high!','Investors are watching the downtown district.','A new competitor opened across town.','Commercial rents have increased this quarter.'];$('#newsText').textContent=news[(state.day-2)%news.length];toast('Day '+state.day+' · '+money(earned)+' collected');save(false);render()};
+function save(show=true){localStorage.setItem('businessTycoonSave',JSON.stringify(state));if(show)toast('Game saved')}
+$('#saveBtn').onclick=()=>save(true);$('#settingsBtn').onclick=()=>{openProperty(state.owned[0])};
+$('#closeModal').onclick=()=>$('#modal').classList.add('hidden');$('#modal').onclick=e=>{if(e.target.id==='modal')e.target.classList.add('hidden')};
+document.querySelectorAll('.nav').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.nav').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));const map={city:'cityView',businesses:'businessView',market:'marketView',missions:'missionsView'};$('#'+map[btn.dataset.view]).classList.add('active');const titles={city:'Downtown District',businesses:'My Businesses',market:'Investment Market',missions:'Tycoon Missions'};$('#viewTitle').textContent=titles[btn.dataset.view];$('#viewTitle').nextElementSibling&&($('#viewTitle').nextElementSibling.style.display='')});
+render();
