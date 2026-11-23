@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Northline Railways</title>
+<style>
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#091016;font-family:Inter,Segoe UI,sans-serif;color:#edf4f4}
+canvas{display:block;width:100%;height:100%}
+#hud{position:absolute;inset:0;pointer-events:none;text-shadow:0 1px 3px #000}
+.topbar{position:absolute;left:24px;right:24px;top:18px;height:52px;display:flex;justify-content:space-between;align-items:flex-start}
+.brand{display:flex;gap:10px;align-items:center}.mark{width:38px;height:38px;border:2px solid #e7eceb;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:17px}.brand b{display:block;font-size:13px;letter-spacing:2px}.brand small{display:block;color:#bac7c5;font-size:10px;margin-top:3px;letter-spacing:1px}
+.status{display:flex;gap:8px}.pill{background:rgba(8,18,21,.78);border:1px solid rgba(255,255,255,.15);border-radius:7px;padding:8px 11px;font-size:11px;letter-spacing:.7px;backdrop-filter:blur(8px)}.green{color:#74d88a}.amber{color:#f2c86b}
+.bottom{position:absolute;left:24px;right:24px;bottom:20px;display:flex;align-items:flex-end;justify-content:space-between}
+.speedbox{width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(12,24,29,.96) 0 57%,rgba(20,39,44,.95) 58% 61%,rgba(5,11,14,.9) 62%);border:1px solid rgba(255,255,255,.18);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 10px 35px rgba(0,0,0,.35)}
+.speedbox .num{font-family:Georgia,serif;font-size:43px;line-height:42px}.speedbox .unit{font-size:9px;letter-spacing:2px;color:#adbbb8}.tach{position:absolute;width:126px;height:126px;border-radius:50%;border:3px dotted rgba(255,255,255,.14);border-bottom-color:transparent}
+.controls{display:flex;align-items:flex-end;gap:10px}.panel{background:rgba(8,18,21,.82);border:1px solid rgba(255,255,255,.15);border-radius:9px;padding:10px 12px;backdrop-filter:blur(8px)}
+label{display:block;font-size:9px;letter-spacing:1.4px;color:#9fb0ae;margin-bottom:7px}.meter{display:flex;height:38px;gap:3px}.tick{width:7px;border-radius:2px;background:rgba(255,255,255,.13)}.tick.on{background:#6fcf91}.tick.amber.on{background:#edb95c}.tick.red.on{background:#df6b57}
+.levers{display:flex;gap:12px}.lever{text-align:center}.lever-box{height:52px;width:28px;border-radius:14px;background:#111c1f;border:1px solid #536264;position:relative}.lever-box i{position:absolute;left:5px;width:16px;height:16px;border-radius:50%;background:#e7edeb;box-shadow:0 2px 5px #000;transition:top .15s}.lever-name{font-size:8px;color:#9fb0ae;margin-top:5px}
+#stationCard{position:absolute;left:50%;bottom:34px;transform:translateX(-50%) translateY(180px);width:min(430px,42vw);background:rgba(7,17,20,.92);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:13px 16px;text-align:center;transition:.45s cubic-bezier(.2,.8,.2,1);backdrop-filter:blur(10px)}#stationCard.show{transform:translateX(-50%) translateY(0)}#stationCard b{font-size:12px;letter-spacing:2px}.progress{height:3px;margin-top:10px;background:#263536;border-radius:3px;overflow:hidden}.progress i{display:block;height:100%;width:0;background:#83c89a}
+.toast{position:absolute;top:84px;left:50%;transform:translateX(-50%);background:rgba(8,18,21,.82);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:8px 14px;font-size:10px;letter-spacing:.8px;opacity:0;transition:.3s}.toast.show{opacity:1}
+.help{position:absolute;right:24px;top:82px;width:210px;background:rgba(8,18,21,.82);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:10px 12px;font-size:10px;color:#bbc7c5;line-height:1.8;transition:.3s}.help.hide{opacity:0}.key{display:inline-grid;place-items:center;min-width:19px;height:19px;border:1px solid #71807e;border-radius:4px;color:#fff;margin-right:5px;font-weight:bold}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="hud">
+  <div class="topbar"><div class="brand"><div class="mark">N</div><div><b>NORTHLINE</b><small>WESTERN &amp; COASTAL</small></div></div><div class="status"><div class="pill"><span class="green">●</span> TRACK CLEAR</div><div class="pill" id="weather">WEATHER &nbsp; 18°C</div></div></div>
+  <div class="toast" id="toast">AUTOMATIC BRAKE READY</div>
+  <div class="help" id="help"><b>DRIVER CONTROLS</b><br><span class="key">W</span> Power up &nbsp;&nbsp; <span class="key">S</span> Brake<br><span class="key">A</span> Reverser back &nbsp; <span class="key">D</span> Reverser forward<br><span class="key">R</span> Reset route</div>
+  <div class="bottom">
+    <div class="speedbox"><div class="tach"></div><div class="num" id="speed">000</div><div class="unit">KM/H</div></div>
+    <div id="stationCard"><b id="stationName">APPROACHING HAWTHORNE</b><div class="progress"><i id="stationProgress"></i></div></div>
+    <div class="controls"><div class="panel"><label>TRACTION</label><div class="meter" id="traction"></div></div><div class="panel"><label>BRAKE</label><div class="meter" id="brake"></div></div><div class="panel levers"><div class="lever"><div class="lever-box"><i id="powerLever" style="top:32px"></i></div><div class="lever-name">POWER</div></div><div class="lever"><div class="lever-box"><i id="brakeLever" style="top:32px"></i></div><div class="lever-name">BRAKE</div></div></div></div>
+  </div>
+</div>
+<script>
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+let W,H,DPR;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0)}addEventListener('resize',resize);resize();
+let speed=0,power=0,trainBrake=0,distance=0,route=0,reverser=1,running=true;
+const keys={};addEventListener('keydown',e=>{keys[e.key.toLower=e.key.length?e.key.toLowerCase():e.key]=true;if(e.key==='r'||e.key==='R')reset();if(e.key===' ')running=!running;e.prevent;});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+for(let i=0;i<10;i++){traction.innerHTML+='<i class="tick'+(i>6?' amber':'')+'"></i>';brake.innerHTML+='<i class="tick'+(i>6?' red':'')+'"></i>'}
+function reset(){speed=0;power=0;trainBrake=0;distance=0;route=0;reverser=1;toast('ROUTE RESET — HAWTHORNE LINE');}
+function toast(t){const x=document.getElementById('toast');x.textContent=t;x.classList.add('show');clearTimeout(x.timer);x.timer=setTimeout(()=>x.classList.remove('show'),1800)}
+function update(dt){
+ if(keys.w)power=Math.min(1,power+dt*.38);if(keys.s)trainBrake=Math.min(1,trainBrake+dt*.55);
+ if(!keys.w)power=Math.max(0,power-dt*.22);if(!keys.s)trainBrake=Math.max(0,trainBrake-dt*.34);
+ if(keys.d&&speed<2)reverser=1;if(keys.a&&speed<2)reverser=-1;
+ if(running){let accel=(power*.32-trainBrake*.48)*reverser-Math.abs(speed)*.004;speed=Math.max(0,Math.min(125,speed+accel*dt));distance+=speed*dt/3.6;route=(distance%4000)/4000}else speed=Math.max(0,speed-dt*2);
+ document.getElementById('speed').textContent=String(Math.round(speed)).padStart(3,'0');
+ const pts=Math.round(power*10),bps=Math.round(trainBrake*10);[...traction.children].forEach((x,i)=>x.classList.toggle('on',i<pts));[...brake.children].forEach((x,i)=>x.classList.toggle('on',i<bps));
+ powerLever.style.top=(32-power*32)+'px';brakeLever.style.top=(32-trainBrake*32)+'px';
+ const nextStation=(Math.floor(distance/4000)+1)*4000;const remaining=nextStation-distance;if(remaining<500&&remaining>0){stationCard.classList.add('show');stationName.textContent='APPROACHING '+(Math.floor(distance/4000)%2?'HAWTHORNE':'PINEHAVEN');stationProgress.style.width=((500-remaining)/5)+'%';if(speed>30&&remaining<400)trainBrake=Math.min(1,trainBrake+dt*.25)}else stationCard.classList.remove('show');
+}
+function poly(points,fill){ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0],points[i][1]);ctx.closePath();ctx.fillStyle=fill;ctx.fill()}
+function line(x1,y1,x2,y2,w,c){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.lineWidth=w;ctx.strokeStyle=c;ctx.stroke()}
+function draw(){
+ const horizon=H*.43,curve=Math.sin(distance*.00025)*W*.035;
+ let g=ctx.createLinearGradient(0,0,0,horizon);g.addColorStop(0,'#82a5b0');g.addColorStop(.75,'#b7c3bc');g.addColorStop(1,'#d5d1bb');ctx.fillStyle=g;ctx.fillRect(0,0,W,horizon);
+ // sun and haze
+ ctx.fillStyle='rgba(255,248,205,.75)';ctx.beginPath();ctx.arc(W*.72,horizon*.34,36,0,Math.PI*2);ctx.fill();
+ // distant mountains
+ poly([[0,horizon*.82],[W*.08,horizon*.55],[W*.17,horizon*.78],[W*.29,horizon*.48],[W*.42,horizon*.76],[W*.56,horizon*.58],[W*.69,horizon*.79],[W*.82,horizon*.52],[W,horizon*.78],[W,horizon],[0,horizon]],'#71827b');
+ poly([[0,horizon*.9],[W*.12,horizon*.68],[W*.24,horizon*.88],[W*.38,horizon*.61],[W*.52,horizon*.86],[W*.68,horizon*.64],[W*.82,horizon*.85],[W,horizon*.66],[W,horizon],[0,horizon]],'#66766f');
+ // ground
+ g=ctx.createLinearGradient(0,horizon,0,H);g.addColorStop(0,'#71825e');g.addColorStop(1,'#4e6046');ctx.fillStyle=g;ctx.fillRect(0,horizon,W,H-horizon);
+ // track perspective
+ const cx=W/2+curve,top=horizon*.97,bottom=W*.7;
+ poly([[cx-7,top],[cx+7,top],[W/2+bottom/2,H],[W/2-bottom/2,H]],'#777a70');
+ poly([[cx-4,top],[cx+4,top],[W/2+bottom*.48,H],[W/2-bottom*.48,H]],'#55584f');
+ // rails
+ line(cx-2,top,W/2-bottom*.48,H,3,'#aeb6aa');line(cx+2,top,W/2+bottom*.48,H,3,'#aeb6aa');
+ // sleepers
+ for(let i=0;i<26;i++){let z=((i/26)+(distance*.006)%1)%1,y=horizon+(z*z)*(H-horizon);let railGap=bottom*z*.48;line(W/2-railGap,y,W/2+railGap,y,Math.max(1,z*7),'#3b3830')}
+ // scenery posts, trees and signals
+ for(let i=0;i<16;i++){let z=((i/16)+(distance*.003)%1)%1;if(z<.05)continue;let y=horizon+z*z*(H-horizon),side=i%2?1:-1,spread=W*.25*z*z+W*.08,px=cx+side*spread,s=Math.max(.2,z*z*70);drawTree(px,y,s)}
+ drawSignal(cx-W*.18*(.6+speed/300),horizon+H*.12,1);
+ // station platform glimpses
+ if(route>.72||route<.12){let z=route>.72?(route-.72)/.28:(.12-route)/.12,zs=Math.max(.05,1-z);drawStation(cx+W*.25*(1-z),horizon+(1-z)*(H-horizon*.3),zs)}
+ // foreground train
+ drawCab();
+ requestAnimationFrame(loop);
+}
+function drawTree(x,y,s){ctx.fillStyle='#4f4935';ctx.fillRect(x-2*s/8,y-s*.35,s*.3,s*.5);ctx.fillStyle='#4f6749';ctx.beginPath();ctx.moveTo(x,y-s);ctx.lineTo(x-s*.6,y-s*.25);ctx.lineTo(x+s*.6,y-s*.25);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(x,y-s*.7);ctx.lineTo(x-s*.75,y-s*.05);ctx.lineTo(x+s*.75,y-s*.05);ctx.closePath();ctx.fill()}
+function drawSignal(x,y,on){ctx.strokeStyle='#30332f';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x,y+45);ctx.lineTo(x,y-25);ctx.stroke();ctx.fillStyle='#202723';ctx.fillRect(x-10,y-40,20,35);ctx.fillStyle=on?'#78d38c':'#a64f43';ctx.beginPath();ctx.arc(x,y-22,6,0,Math.PI*2);ctx.fill()}
+function drawStation(x,y,s){ctx.fillStyle='#9b7a5a';ctx.fillRect(x-130*s,y-38*s,260*s,18*s);ctx.fillStyle='#b9b0a0';ctx.fillRect(x-150*s,y-20*s,300*s,18*s);ctx.fillStyle='#3c4a48';for(let i=-2;i<=2;i++)ctx.fillRect(x+i*50*s,y-75*s,5*s,38*s);ctx.fillStyle='#31413f';ctx.fillRect(x-125*s,y-82*s,250*s,18*s)}
+function drawCab(){const x=W/2,y=H*.69,w=W*.42,h=Math.min(H*.26,210);ctx.save();ctx.shadowBlur=25;ctx.shadowColor='rgba(0,0,0,.35)';poly([[x-w*.38,y],[x-w*.30,y-h*.72],[x-w*.19,y-h*.95],[x+w*.19,y-h*.95],[x+w*.30,y-h*.72],[x+w*.38,y],[x+w*.48,H],[x-w*.48,H]],'#172126');ctx.shadowBlur=0;
+ // windows
+ poly([[x-w*.29,y-h*.68],[x-w*.18,y-h*.89],[x-w*.02,y-h*.89],[x-w*.02,y-h*.38],[x-w*.30,y-h*.38]],'#78909a');poly([[x+w*.29,y-h*.68],[x+w*.18,y-h*.89],[x+w*.02,y-h*.89],[x+w*.02,y-h*.38],[x+w*.30,y-h*.38]],'#78909a');
+ // reflection and dashboard
+ poly([[x-w*.02,y-h*.89],[x+w*.02,y-h*.89],[x+w*.02,y-h*.38],[x-w*.02,y-h*.38]],'#b2c2c1');ctx.fillStyle='#0c1517';ctx.fillRect(x-w*.40,y-h*.15,w*.80,h*.22);ctx.fillStyle='#c9d0cd';ctx.fillRect(x-w*.37,y-h*.10,w*.74,3);
+ // side red detail
+ ctx.fillStyle='#a64e42';ctx.fillRect(x-w*.38,y+h*.02,w*.76,h*.04);ctx.fillStyle='#d6dbd5';ctx.fillRect(x-w*.34,y+h*.10,w*.68,h*.03);ctx.restore();}
+let last=performance.now();function loop(now){let dt=Math.min(.05,(now-last)/1000);last=now;update(dt);draw();}
+requestAnimationFrame(loop);
+setTimeout(()=>toast('AUTOMATIC BRAKE READY'),700);setTimeout(()=>document.getElementById('help').classList.add('hide'),9000);
+</script>
+</body></html>
