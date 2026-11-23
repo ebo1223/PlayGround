@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Empire Conquest</title>
+<style>
+:html,*{box-sizing:border-box}body{margin:0;font-family:Georgia,'Times New Roman',serif;background:#17130f;color:#ece5d5;overflow:hidden}*{box-sizing:border-box}
+#game{width:100vw;height:100vh;display:grid;grid-template-rows:64px 1fr 82px;background:radial-gradient(circle at 50% 45%,#27251e,#11130f 75%)}
+header{display:flex;align-items:center;padding:0 22px;border-bottom:1px solid #6a5a3a;background:linear-gradient(#262219,#17150f);box-shadow:0 4px 18px #0009}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto}.crest{width:38px;height:38px;border:2px solid #b7a16a;transform:rotate(45deg);display:grid;place-items:center;color:#d8bd79;font-size:22px;background:#302b20}.crest span{transform:rotate(-45deg)}
+h1{font-size:21px;letter-spacing:4px;margin:0;text-transform:uppercase}.subtitle{font-size:9px;letter-spacing:3px;color:#9c9279;margin-top:3px}
+.resources{display:flex;height:38px;border:1px solid #514731}.resource{width:110px;display:flex;align-items:center;justify-content:center;gap:8px;border-right:1px solid #514731;font-family:Arial;font-size:13px}.resource:last-child{border:0}.icon{color:#dabd75;font-size:18px}.resource b{color:#fff0ba}.turn{margin-left:14px;padding:8px 14px;border:1px solid #8f7a50;color:#c9b77e;font-size:11px;letter-spacing:2px}
+main{position:relative;overflow:hidden}.map{position:absolute;inset:0;background:linear-gradient(15deg,transparent 49.8%,#575b4a44 50%,transparent 50.2%),radial-gradient(ellipse at 53% 50%,#3d4832 0 22%,#30382b 22% 48%,#252d25 48% 70%,#1a211c 100%)}
+.map:before{content:'';position:absolute;inset:-10%;opacity:.38;background:repeating-radial-gradient(ellipse at 40% 55%,transparent 0 42px,#8b806330 43px 45px),repeating-linear-gradient(34deg,#0000 0 70px,#a5a17a16 71px 72px)}
+.province{position:absolute;width:112px;height:112px;clip-path:polygon(50% 0,91% 19%,100% 58%,73% 91%,29% 100%,0 66%,8% 25%);background:rgba(52,57,43,.92);border:0;outline:1px solid transparent;transition:.18s;cursor:pointer;filter:drop-shadow(0 8px 5px #0008);display:grid;place-items:center}
+.province:hover{transform:scale(1.07);filter:brightness(1.18) drop-shadow(0 8px 5px #0008)}.province.selected{background:#707452;filter:drop-shadow(0 0 12px #dbc58a)}
+.province.player{background:#55705a}.province.enemy{background:#775245}.province.neutral{background:#77705a}
+.province:after{content:'';position:absolute;inset:7px;clip-path:inherit;border:1px solid #c4b88a55}
+.city{position:relative;width:48px;height:48px;z-index:2}.fort{position:absolute;bottom:4px;left:10px;width:28px;height:25px;background:#171a16;border:2px solid #c7b47d;clip-path:polygon(0 30%,15% 30%,15% 0,30% 0,30% 30%,70% 30%,70% 0,85% 0,85% 30%,100% 30%,100% 100%,0 100%)}.flag{position:absolute;left:32px;bottom:27px;width:25px;height:18px;background:#b5a46e;clip-path:polygon(0 0,100% 12%,82% 50%,100% 85%,0 100%)}.enemy .flag{background:#a65f50}.player .flag{background:#70a07c}.neutral .flag{background:#aaa178}
+.troops{position:absolute;z-index:3;bottom:-7px;left:-3px;width:54px;text-align:center;color:#fff2b5;font:bold 12px Arial;text-shadow:0 2px 3px #000}.troops:before{content:'♟';font-size:15px;margin-right:3px}
+.connection{position:absolute;height:2px;background:#cbbd7755;transform-origin:left center;pointer-events:none;box-shadow:0 0 4px #000}
+#toast{position:absolute;top:20px;left:50%;transform:translateX(-50%) translateY(-20px);opacity:0;padding:10px 18px;background:#201d16e8;border:1px solid #817350;color:#ddd09c;font-size:12px;letter-spacing:1px;transition:.25s;z-index:20}#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+footer{display:flex;align-items:center;border-top:1px solid #66583b;background:#181711;padding:10px 22px;gap:12px}.panel-title{width:150px;border-right:1px solid #4c4432}.panel-title small{display:block;color:#928669;font-size:9px;letter-spacing:2px}.panel-title strong{display:block;font-size:15px;margin-top:5px;color:#ddd09c}
+.action{height:50px;width:130px;border:1px solid #625638;background:linear-gradient(#332f24,#201e17);color:#ddd3b1;cursor:pointer;font-family:Georgia;position:relative}.action:hover{border-color:#bcaa75;background:linear-gradient(#45412f,#29261c)}.action:disabled{opacity:.38;cursor:not-allowed}.action b{display:block;font-size:12px;letter-spacing:1px}.action small{display:block;color:#978c70;font:9px Arial;margin-top:5px}.action .key{position:absolute;right:6px;top:5px;color:#756a50;font:9px Arial}
+.end{margin-left:auto;height:48px;width:150px;border:1px solid #9b8352;background:#a58a4e;color:#17150f;font:bold 12px Georgia;letter-spacing:2px;cursor:pointer}.end:hover{background:#c1a867}
+.modal{display:none;position:absolute;inset:0;background:#0d0e0acc;z-index:30;place-items:center}.modal.show{display:grid}.box{width:min(430px,90vw);border:1px solid #91784a;background:linear-gradient(#302d22,#171712);padding:28px;text-align:center;box-shadow:0 20px 80px #000}.box h2{margin:0 0 8px;letter-spacing:5px}.box p{color:#aaa080;font-size:13px;line-height:1.6}.box button{margin-top:12px;height:42px;padding:0 24px;border:1px solid #b29a63;background:#a38a50;color:#17150f;font:bold 12px Georgia}
+@media(max-width:700px){header{padding:0 10px}.resources{transform:scale(.82);transform-origin:right}.resource{width:82px}.turn{display:none}h1{font-size:16px}.subtitle{display:none}.province{width:82px;height:82px}.troops{font-size:10px}.panel-title{display:none}.action{width:29%;height:54px}.end{width:90px}.brand{gap:8px}.crest{width:32px;height:32px}}
+</style>
+</head>
+<body><div id="game">
+<header><div class="brand"><div class="crest"><span>♛</span></div><div><h1>Empire Conquest</h1><div class="subtitle">THE KINGDOMS OF THE NORTH</div></div></div>
+<div class="resources"><div class="resource"><span class="icon">◈</span><b id="gold">240</b></div><div class="resource"><span class="icon">♟</span><b id="men">85</b></div><div class="resource"><span class="icon">♜</span><b id="territories">4</b></div></div><div class="turn" id="turnLabel">YEAR 1 · SPRING</div></header>
+<main id="main"><div class="map" id="map"></div><div id="toast">Province selected</div><div class="modal" id="modal"><div class="box"><h2 id="modalTitle">VICTORY</h2><p id="modalText">The realm is united beneath your banner.</p><button id="restart">REIGN AGAIN</button></div></div></main>
+<footer><div class="panel-title"><small>COMMAND</small><strong id="selectedName">Select Province</strong></div>
+<button class="action" id="recruit" disabled><span class="key">1</span><b>Recruit</b><small>+12 troops · 35 gold</small></button>
+<button class="action" id="fortify" disabled><span class="key">2</span><b>Fortify</b><small>Cost 50 gold</small></button>
+<button class="action" id="attack" disabled><span class="key">3</span><b>March</b><small>Move against enemy</small></button>
+<button class="end" id="endTurn">END TURN</button></footer>
+</div>
+<script>
+const defs=[
+['King’s Landing',20,18,'player',18,3],['Northwatch',43,12,'enemy',16,2],['Eldermere',66,19,'neutral',12,1],
+['Highvale',31,39,'player',15,2],['Greyfen',54,38,'enemy',20,2],['Sunspire',77,43,'neutral',10,1],
+['Westreach',19,62,'player',14,1],['Iron Pass',43,63,'enemy',23,3],['Dawncourt',66,62,'player',17,2],['Red Marsh',30,84,'enemy',19,2],['Ashen Vale',54,82,'neutral',14,1],['Southhold',76,80,'enemy',21,2]
+];
+let provinces=[],selected=null,gold=240,men=85,turn=1,season=0;
+const seasons=['SPRING','SUMMER','AUTUMN','WINTER'];
+const map=document.getElementById('map');
+function init(){provinces=[];gold=240;men=85;turn=1;season=0;selected=null;map.innerHTML='';
+ defs.forEach((d,i)=>{const p={id:i,name:d[0],x:d[1],y:d[2],owner:d[3],troops:d[4],fort:d[5]};provinces.push(p);
+ const el=document.createElement('button');el.className='province '+p.owner;el.style.left=`calc(${p.x}% - 56px)`;el.style.top=`calc(${p.y}% - 56px)`;el.dataset.id=i;el.innerHTML='<div class="city"><div class="fort"></div><div class="flag"></div><div class="troops">'+p.troops+'</div></div>';el.onclick=()=>selectProvince(i);map.appendChild(el)});update()}
+const links=[[0,3],[0,6],[1,4],[2,5],[3,4],[3,6],[3,7],[4,5],[4,7],[4,8],[5,8],[6,9],[7,9],[7,10],[8,10],[8,11],[9,10],[10,11]];
+links.forEach(l=>{const a=provinces[l[0]],b=provinces[l[1]];if(!a||!b)return;const line=document.createElement('div');line.className='connection';const ax=a.x/100*innerWidth,ay=a.y/100*(innerHeight-146)+64,bx=b.x/100*innerWidth,by=b.y/100*(innerHeight-146)+64;line.style.left=a.x+'%';line.style.top=a.y+'%';const dx=bx-ax,dy=by-ay,len=Math.sqrt(dx*dx+dy*dy);line.style.width=len+'px';line.style.transform=`rotate(${Math.atan2(dy,dx)}rad)`;map.appendChild(line)});
+function selectProvince(i){const p=provinces[i];if(selected===i){selected=null}else selected=i;document.querySelectorAll('.province').forEach((e,n)=>e.classList.toggle('selected',n===selected));document.getElementById('selectedName').textContent=p.name;update()}
+function adjacent(a,b){return links.some(l=>(l[0]===a&&l[1]===b)||(l[1]===a&&l[0]===b))}
+function update(){document.querySelectorAll('.province').forEach((e,i)=>{e.className='province '+provinces[i].owner+(selected===i?' selected':'');e.querySelector('.troops').textContent=provinces[i].troops});document.getElementById('gold').textContent=gold;document.getElementById('men').textContent=men;document.getElementById('territories').textContent=provinces.filter(p=>p.owner==='player').length;document.getElementById('turnLabel').textContent=`YEAR ${turn} · ${seasons[season]}`;
+ const p=selected===null?null:provinces[selected];const owned=p&&p.owner==='player';document.getElementById('recruit').disabled=!owned||gold<35;document.getElementById('fortify').disabled=!owned||gold<50;document.getElementById('attack').disabled=!owned||p.troops<6;
+ checkEnd()}
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.classList.add('show');clearTimeout(e.hide);e.hide=setTimeout(()=>e.classList.remove('show'),1500)}
+document.getElementById('recruit').onclick=()=>{if(selected===null)return;const p=provinces[selected];if(p.owner==='player'&&gold>=35){gold-=35;men+=12;p.troops+=12;toast(`${p.name} garrison reinforced`);update()}};
+document.getElementById('fortify').onclick=()=>{if(selected===null)return;const p=provinces[selected];if(p.owner==='player'&&gold>=50){gold-=50;p.fort++;toast(`${p.name} fortification strengthened`);update()}};
+document.getElementById('attack').onclick=()=>{if(selected===null)return;const from=provinces[selected];if(from.owner!=='player'||from.troops<6)return;const targets=provinces.filter(p=>adjacent(from.id,p.id)&&p.owner!=='player');if(!targets.length){toast('No enemy province nearby');return}targets.sort((a,b)=>a.troops-b.troops);const target=targets[0];const army=Math.min(from.troops-1,12);const defense=target.troops+target.fort*2;const roll=Math.floor(Math.random()*7)+Math.floor(army*.8);if(roll>=defense){target.owner='player';target.troops=Math.max(1,army-Math.floor(target.troops*.35));from.troops-=army;gold+=25;men-=Math.floor(target.troops*.15);toast(`${target.name} has fallen`)}else{const loss=Math.max(1,Math.floor(army*.55));from.troops-=loss;target.troops=Math.max(1,target.troops-Math.floor(loss*.25));toast('The assault was repelled')};update()};
+document.getElementById('endTurn').onclick=()=>{turn++;season=(season+1)%4;gold+=35*provinces.filter(p=>p.owner==='player').length;provinces.forEach(p=>{if(p.owner==='player'){p.troops+=4;p.troops=Math.min(p.troops,40)}else if(p.owner==='enemy'&&Math.random()<.28&&p.troops<35)p.troops+=3;if(p.owner==='enemy'&&p.troops>18&&Math.random()<.16){const possible=provinces.filter(q=>adjacent(p.id,q.id)&&q.owner==='neutral');if(possible.length){possible[0].owner='enemy';possible[0].troops=12}}});toast(`Turn complete · Income collected`);update()};
+function checkEnd(){const player=provinces.filter(p=>p.owner==='player').length;if(player===provinces.length)showModal(true);if(provinces.every(p=>p.owner!=='player'))showModal(false)}
+function showModal(win){document.getElementById('modalTitle').textContent=win?'VICTORY':'DEFEAT';document.getElementById('modalText').textContent=win?'The realm is united beneath your banner.':'Your dynasty has fallen. The kingdoms remain divided.';document.getElementById('modal').classList.add('show')}
+document.getElementById('restart').onclick=()=>{document.getElementById('modal').classList.remove('show');init()};
+window.onkeydown=e=>{if(e.key==='1')document.getElementById('recruit').click();if(e.key==='2')document.getElementById('fortify').click();if(e.key==='3')document.getElementById('attack').click();if(e.key==='Enter')document.getElementById('endTurn').click()};
+init();
+</script></body></html>
