@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Whack-a-Mole 3D</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="game" aria-label="Whack-a-Mole game board"></canvas>
+
+  <header class="hud">
+    <div class="brand"><span class="brand-mark">●</span><div><small>BACKYARD</small><strong>MOLE CLUB</strong></div></div>
+    <div class="stats">
+      <div class="stat"><small>SCORE</small><strong id="score">0000</strong></div>
+      <div class="stat time"><small>TIME</small><strong id="timer">30</strong></div>
+      <div class="stat"><small>BEST</small><strong id="best">0000</strong></div>
+    </div>
+  </header>
+
+  <div id="startScreen" class="overlay">
+    <div class="panel">
+      <div class="trophy">🏆</div>
+      <p class="eyebrow">THE GARDEN CHALLENGE</p>
+      <h1>WHACK-A-MOLE</h1>
+      <p class="subtitle">Whack the moles! Avoid the bombs.</p>
+      <button id="startBtn" class="primary"><span>START GAME</span><b>→</b></button>
+      <div class="controls"><span>CLICK / TAP</span><i></i><span>TO WHACK</span></div>
+    </div>
+  </div>
+
+  <div id="endScreen" class="overlay hidden">
+    <div class="panel">
+      <div class="trophy">🎪</div>
+      <p class="eyebrow">TIME'S UP!</p>
+      <h1>FINAL SCORE</h1>
+      <strong id="finalScore" class="final-score">0</strong>
+      <p id="resultText" class="subtitle">Great whacking!</p>
+      <button id="againBtn" class="primary"><span>PLAY AGAIN</span><b>↻</b></button>
+    </div>
+  </div>
+
+  <div id="combo" class="combo">NICE! <span>+100</span></div>
+  <div id="flash" class="flash"></div>
+<script src="game.js"></script>
+</body>
+</html>
