@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Sky Hop</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <canvas id="game" aria-label="Sky Hop game"></canvas>
+
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">S</span><span>SKY HOP</span></div>
+      <div class="score-card"><span class="score-label">BEST</span><strong id="bestScore">0</strong></div>
+    </header>
+
+    <section id="overlay" class="overlay">
+      <div class="panel">
+        <div class="kicker">A tiny sky adventure</div>
+        <h1 id="title">SKY<br><span>HOP</span></h1>
+        <p id="subtitle">Guide Pip through the clouds</p>
+        <button id="playButton" type="button"><span id="buttonText">PLAY</span><b>›</b></button>
+        <div class="controls"><kbd>SPACE</kbd><span>or</span><kbd>CLICK</kbd></div>
+      </div>
+    </section>
+
+    <div id="gameHud" class="game-hud hidden" aria-live="polite">
+      <div id="liveScore">0</div>
+      <div class="round-label">SCORE</div>
+    </div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
