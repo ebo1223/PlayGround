@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Pinball Master</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><text y=%2252%22 font-size=%2256%22>🎯</text></svg>">
+<style>
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#090c1c;color:#fff;font-family:Impact,"Arial Black",system-ui,sans-serif}body{display:grid;place-items:center}.cabinet{position:relative;width:min(94vw,920px);height:min(96vh,900px);display:grid;grid-template-rows:74px 1fr 74px}.scorebar{display:grid;grid-template-columns:1fr 1.1fr 1fr;align-items:center;border:3px solid #5260a3;border-bottom:0;border-radius:22px 22px 0 0;background:linear-gradient(180deg,#171f48,#090c1c);padding:8px 18px;box-shadow:0 0 18px #273b8a inset}.stat{text-align:center}.label{display:block;color:#91a3ff;font-size:10px;letter-spacing:3px}.value{display:block;color:#fff;font-size:25px;line-height:1;text-shadow:0 0 12px #7f91ff}.score{text-align:center}.score .value{font-size:38px;color:#ffe58a}.stage{position:relative;overflow:hidden;border-left:3px solid #5260a3;border-right:3px solid #5260a3;background:#090d21}canvas{width:100%;height:100%;display:block}.controls{display:flex;align-items:center;justify-content:space-between;border:3px solid #5260a3;border-top:0;border-radius:0 0 22px 22px;background:linear-gradient(180deg,#090c1c,#171f48);padding:7px 18px}.keybtn{width:94px;height:50px;border:2px solid #6879c7;border-radius:12px;background:linear-gradient(180deg,#283770,#10183a);color:#fff;font:800 12px system-ui;letter-spacing:2px;touch-action:none;box-shadow:0 4px 0 #060819}.keybtn:active,.keybtn.active{transform:translateY(3px);background:linear-gradient(180deg,#ff4dba,#a82978);box-shadow:0 1px 0 #060819}.launch{font-size:14px;border-color:#c3ad43;background:linear-gradient(180deg,#5d4f1c,#251f0d)}.overlay{position:absolute;inset:0;display:grid;place-items:center;text-align:center;background:rgba(5,7,22,.82);z-index:3}.overlay.hidden{display:none}.panel{width:min(78%,420px);padding:28px 20px;border:3px solid #7284dc;border-radius:18px;background:linear-gradient(180deg,#171f48,#090c1c);box-shadow:0 0 40px #3145ae}.panel h1{margin:0 0 6px;font-size:48px;color:#ffe58a;text-shadow:3px 3px 0 #c04078}.panel p{margin:8px 0 20px;color:#bbc5ff;letter-spacing:1px}.panel button{border:2px solid #ffe58a;border-radius:10px;background:#c04078;color:#fff;padding:13px 26px;font:900 16px system-ui;letter:spacing:1px}.notice{position:absolute;top:18%;left:50%;transform:translateX(-50%);z-index:2;font-size:25px;color:#ffe58a;text-shadow:0 0 12px #ff4dba;pointer-events:none;opacity:0;transition:.25s}.notice.show{opacity:1}@media(max-width:600px){.cabinet{width:100vw;height:100vh}.scorebar{border-radius:0}.controls{border-radius:0}.panel h1{font-size:38px}.keybtn{width:80px}}
+</style>
+</head>
+<body>
+<div class="cabinet">
+<div class="scorebar"><div class="stat"><span class="label">BALL</span><span class="value" id="ball">01</span></div><div class="score"><span class="label">HIGH SCORE</span><span class="value" id="score">000000</span></div><div class="stat"><span class="label">BEST</span><span class="value" id="best">000000</span></div></div>
+<div class="stage"><canvas id="game"></canvas><div class="notice" id="notice">NICE SHOT!</div><div class="overlay" id="overlay"><div class="panel"><h1>PINBALL<br>MASTER</h1><p>Smash the targets · chase the stars</p><button id="start">START GAME</button></div></div></div>
+<div class="controls"><button class="keybtn" id="left">◀ LEFT</button><button class="keybtn launch" id="launch">LAUNCH</button><button class="keybtn" id="right">RIGHT ▶</button></div>
+</div>
+<script>
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),overlay=document.getElementById('overlay'),notice=document.getElementById('notice');
+let W,H,dpr,ball,balls=3,score=0,best=+localStorage.pinballBest||0,left=false,right=false,running=false,started=false,shake=0,combo=1;
+let stars=[];let targets=[];let particles=[];
+function resize(){let r=canvas.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);makeTable()} 
+function makeTable(){stars=[];for(let i=0;i<38;i++)stars.push({x:(i*137%1000)/1000*W,y:(i*263%1000)/1000*H,a:.15+((i*7)%5)*.12});targets=[];let ys=[.34,.43,.52];let cols=[.28,.40,.52,.64,.76];for(let y of ys)for(let x of cols)targets.push({x:x*W,y:y*H,r:13,hit:false,pulse:0})}
+function resetBall(){ball={x:W*.86,y:H*.79,r:9,vx:0,vy:0,launched:false,trail:[]}}
+function format(n){return String(n).padStart(6,'0')}
+function updateUI(){document.getElementById('score').textContent=format(score);document.getElementById('ball').textContent=String(3-balls+1).padStart(2,'0');document.getElementById('best').textContent=format(best)}
+function showNotice(text){notice.textContent=text;notice.classList.add('show');clearTimeout(showNotice.t);showNotice.t=setTimeout(()=>notice.classList.remove('show'),700)}
+function launch(){if(!running)return;if(!ball.launched){ball.launched=true;ball.vx=(Math.random()-.5)*90;ball.vy=-520;showNotice('BALL AWAY!')}}
+function addScore(n,text){score+=n*combo;if(score>best){best=score;localStorage.pinballBest=best}updateUI();if(text)showNotice(text)}
+function burst(x,y,c){for(let i=0;i<12;i++){let a=i*Math.PI*2/12;particles.push({x,y,vx:Math.cos(a)*(80+Math.random()*100),vy:Math.sin(a)*(80+Math.random()*100),life:1,c})}}
+function circleHit(cx,cy,r){let dx=ball.x-cx,dy=ball.y-cy,d=Math.hypot(dx,dy);if(d<r+ball.r){let nx=dx/(d||1),ny=dy/(d||1);ball.x=cx+nx*(r+ball.r+1);ball.y=cy+ny*(r+ball.r+1);let dot=ball.vx*nx+ball.vy*ny;if(dot<0){ball.vx-=1.8*dot*nx;ball.vy-=1.8*dot*ny}return true}}
+function segmentHit(ax,ay,bx,by){let abx=bx-ax,aby=by-ay,apx=ball.x-ax,apy=ball.y-ay,l=abx*abx+aby*aby,t=Math.max(0,Math.min(1,(apx*abx+apy*aby)/l)),cx=ax+abx*t,cy=ay+aby*t,dx=ball.x-cx,dy=ball.y-cy,d=Math.hypot(dx,dy);if(d<ball.r+5){let nx=dx/(d||1),ny=dy/(d||1);ball.x=cx+nx*(ball.r+6);ball.y=cy+ny*(ball.r+6);let dot=ball.vx*nx+ball.vy*ny;if(dot<0){ball.vx-=2*dot*nx;ball.vy-=2*dot*ny;ball.vx+=nx*15;ball.vy+=ny*15}return true}}
+function update(dt){if(!running)return;let g=420;if(ball.launched){ball.vy+=g*dt;ball.vx*=Math.pow(.994,dt*60);ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;ball.trail.unshift({x:ball.x,y:ball.y});if(ball.trail.length>9)ball.trail.pop();
+let wall=22;if(ball.x-ball.r<wall){ball.x=wall+ball.r;ball.vx=Math.abs(ball.vx)*.82}if(ball.x+ball.r>W-wall){ball.x=W-wall-ball.r;ball.vx=-Math.abs(ball.vx)*.82}if(ball.y-ball.r<26){ball.y=26+ball.r;ball.vy=Math.abs(ball.vy)*.82}
+// bumpers
+for(let b of [{x:.18*W,y:.23*H,r:35,c:'#ef3c9a'},{x:.50*W,y:.18*H,r:38,c:'#46d9db'},{x:.82*W,y:.25*H,r:34,c:'#ffd85c'}]){if(circleHit(b.x,b.y,b.r)){ball.vx+=(ball.x-b.x)*7;ball.vy+=(ball.y-b.y)*7;ball.vx*=1.08;ball.vy*=1.08;addScore(500,'BUMPER!');burst(ball.x,ball.y,b.c);shake=5}}
+// posts and slings
+segmentHit(W*.25,H*.67,W*.30,H*.73);segmentHit(W*.75,H*.67,W*.70,H*.73);
+// flippers
+let lx=W*.31,rx=W*.69,ly=H*.88,base=H*.78;let la=left?-.55:-.18,ra=right?.55:.18;segmentHit(lx,ly,lx+Math.cos(la)*90,ly-Math.sin(la)*90);segmentHit(rx,ly,rx-Math.cos(ra)*90,ly-Math.sin(ra)*90);
+for(let t of targets){t.pulse*=.9;if(!t.hit&&circleHit(t.x,t.y,t.r)){t.hit=true;t.pulse=1;combo=Math.min(combo+1,5);addScore(250,'TARGET '+combo+'×');burst(t.x,t.y,'#ffe58a');shake=3} }
+let all=targets.every(t=>t.hit);if(all){targets.forEach(t=>t.hit=false);combo=1;addScore(5000,'TABLE CLEARED!');showNotice('TABLE CLEARED!')}
+if(ball.y>H+25){balls--;updateUI();if(balls<=0){running=false;overlay.classList.remove('hidden');overlay.querySelector('h1').innerHTML='GAME OVER';overlay.querySelector('p').textContent='Final score · '+format(score);overlay.querySelector('button').textContent='PLAY AGAIN'}else resetBall();}} 
+for(let p of particles){p.life-=dt*1.8;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=300*dt}particles=particles.filter(p=>p.life>0);if(shake>0)shake-=dt*20}
+function draw(){ctx.save();if(shake>0)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);let bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,'#101a45');bg.addColorStop(.5,'#090d21');bg.addColorStop(1,'#17102e');ctx.fillStyle=bg;ctx.fillRect(-10,-10,W+20,H+20);
+// stars
+for(let s of stars){ctx.globalAlpha=s.a;ctx.fillStyle='#9faeff';ctx.fillRect(s.x,s.y,1.5,1.5)}ctx.globalAlpha=1;
+// table borders
+ctx.strokeStyle='#4f5fa5';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(20,26);ctx.lineTo(20,H*.72);ctx.quadraticCurveTo(20,H*.82,55,H*.82);ctx.lineTo(W*.25,H*.82);ctx.moveTo(W-20,26);ctx.lineTo(W-20,H*.72);ctx.quadraticCurveTo(W-20,H*.82,W-55,H*.82);ctx.lineTo(W*.75,H*.82);ctx.stroke();
+// bumpers
+for(let b of [{x:.18*W,y:.23*H,r:35,c:'#ef3c9a'},{x:.50*W,y:.18*H,r:38,c:'#46d9db'},{x:.82*W,y:.25*H,r:34,c:'#ffd85c'}]){ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,7);ctx.fillStyle=b.c;ctx.shadowColor=b.c;ctx.shadowBlur=16;ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.stroke();ctx.beginPath();ctx.arc(b.x,b.y,b.r*.45,0,7);ctx.fillStyle='#151b3e';ctx.fill();ctx.fillStyle='#fff';ctx.font='800 11px system-ui';ctx.textAlign='center';ctx.fillText('BONUS',b.x,b.y+4)}
+// targets
+for(let t of targets){ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.pulse*.15);ctx.beginPath();ctx.arc(0,0,t.r+(t.pulse*5),0,7);ctx.fillStyle=t.hit?'#35405e':'#ffe58a';ctx.shadowColor=t.hit?'transparent':'#ffe58a';ctx.shadowBlur=t.hit?0:14;ctx.fill();ctx.restore()}
+// slings
+ctx.strokeStyle='#ed477f';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(W*.25,H*.67);ctx.lineTo(W*.30,H*.73);ctx.moveTo(W*.75,H*.67);ctx.lineTo(W*.70,H*.73);ctx.stroke();
+// flippers
+function flipper(x,base,ang,c){ctx.save();ctx.translate(x,base);ctx.rotate(ang);ctx.lineCap='round';ctx.strokeStyle='#090b18';ctx.lineWidth=20;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(x<W/2?75:-75,0);ctx.stroke();ctx.strokeStyle=c;ctx.lineWidth=14;ctx.stroke();ctx.restore()}flipper(W*.31,H*.88,left?-.55:-.18,'#ef3c9a');flipper(W*.69,H*.88,right?.55:.18,'#46d9db');
+// drain lane
+ctx.fillStyle='#090b18';ctx.beginPath();ctx.moveTo(W*.84,H*.72);ctx.lineTo(W*.92,H*.72);ctx.lineTo(W*.92,H);ctx.lineTo(W*.76,H);ctx.closePath();ctx.fill();ctx.strokeStyle='#4f5fa5';ctx.lineWidth=5;ctx.stroke();
+// ball trail
+if(ball){for(let i=ball.trail.length-1;i>=0;i--){let p=ball.trail[i];ctx.globalAlpha=(ball.trail.length-i)/ball.trail.length*.18;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x,p.y,ball.r*(1-i/12),0,7);ctx.fill()}ctx.globalAlpha=1;ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,7);let g=ctx.createRadialGradient(ball.x-3,ball.y-4,1,ball.x,ball.y,10);g.addColorStop(0,'#fff');g.addColorStop(.35,'#dce4ff');g.addColorStop(1,'#6677a5');ctx.fillStyle=g;ctx.shadowColor='#fff';ctx.shadowBlur=10;ctx.fill();ctx.shadowBlur=0}
+for(let p of particles){ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,3,3)}ctx.globalAlpha=1;ctx.restore()}
+let last=performance.now();function loop(now){let dt=Math.min((now-last)/1000,.025);last=now;update(dt);draw();requestAnimationFrame(loop)}
+function bindHold(el,key){el.addPointerCapture&&el.addEventListener('pointerdown',e=>{e.preventDefault();if(key==='left')left=true;if(key==='right')right=true;if(key==='launch')launch();el.classList.add('active')});let up=()=>{if(key==='left')left=false;if(key==='right')right=false;el.classList.remove('active')};el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)}
+bindHold(document.getElementById('left'),'left');bindHold(document.getElementById('right'),'right');bindHold(document.getElementById('launch'),'launch');
+addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')left=true;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')right=true;if(e.key===' '||e.key==='ArrowUp')launch()});addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')left=false;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')right=false});
+document.getElementById('start').onclick=()=>{overlay.classList.add('hidden');score=0;balls=3;combo=1;resetBall();makeTable();running=true;started=true;updateUI();showNotice('PRESS LAUNCH')};
+addEventListener('resize',resize);resize();resetBall();updateUI();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
