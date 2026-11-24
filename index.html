@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Sword Fighter 3D</title>
+  <style>
+    *{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090b10;font-family:Georgia,'Times New Roman',serif}
+    #game{display:block;width:100%;height:100%}.ui{position:absolute;inset:0;pointer-events:none;color:#fff}
+    #hud{position:absolute;top:24px;left:50%;transform:translateX(-50%);width:min(760px,66vw);display:flex;justify-content:space-between;align-items:flex-start}
+    .fighter{width:230px}.fighter.right{text-align:right}.name{font-size:13px;letter-spacing:4px;text-transform:uppercase;color:#d8c69a;margin-bottom:7px}.bar{height:10px;border:2px solid rgba(230,210,160,.65);background:#241815;transform:skewX(-10deg);overflow:hidden}.right .bar{transform:skewX(10deg)}.health{height:100%;width:100%;background:linear-gradient(90deg,#bd3b30,#e9d099);transition:width .15s}.right .health{margin-left:auto;background:linear-gradient(90deg,#e9d099,#b83432)}
+    #round{position:absolute;top:18px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:5px;color:#a9a38e;margin-top:55px}
+    #combo{position:absolute;bottom:130px;font-size:34px;font-style:italic;font-weight:bold;text-shadow:0 3px 12px #000;display:none}.combo-left{left:14%}.combo-right{right:14%}
+    #status{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);text-align:center;text-shadow:0 6px 24px #000}
+    #status h1{font-size:clamp(46px,7vw,92px);line-height:.85;margin:0;letter-spacing:3px;font-style:italic}#status p{letter-spacing:4px;font-size:12px;color:#d9cda9;margin-top:18px}
+    #controls{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);display:flex;gap:8px}.key{border:1px solid rgba(220,210,180,.25);background:rgba(10,11,15,.55);min-width:48px;height:43px;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif;font-size:10px;color:#aaa}.key b{color:#fff;font-size:12px;margin-right:5px}
+    #mobile{display:none;position:absolute;inset:auto 18px 20px;justify-content:space-between}.pad{display:flex;gap:8px}.mbtn{pointer-events:auto;width:58px;height:58px;border:1px solid rgba(255,255,255,.28);border-radius:50%;background:rgba(20,22,25,.7);color:#fff;font-family:Arial;font-size:13px}
+    @media(max-width:800px),(pointer:coarse){#controls{display:none}#mobile{display:flex}.fighter{width:140px}#hud{width:90vw}.name{font-size:9px}#status h1{font-size:48px}}
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div class="ui">
+    <div id="hud">
+      <div class="fighter"><div class="name">RONIN</div><div class="bar"><div class="health" id="pHealth"></div></div></div>
+      <div id="round">ROUND 1</div>
+      <div class="fighter right"><div class="name">SAMURAI</div><div class="bar"><div class="health" id="eHealth"></div></div></div>
+    </div>
+    <div id="combo" class="combo-left"></div>
+    <div id="status"><h1>READY</h1><p>PRESS SPACE TO BEGIN</p></div>
+    <div id="controls"><div class="key"><b>A/D</b>MOVE</div><div class="key"><b>J</b>SLASH</div><div class="key"><b>K</b>HEAVY</div><div class="key"><b>W</b>DODGE</div></div>
+    <div id="mobile"><div class="pad"><button class="mbtn" data-key="a">◀</button><button class="mbtn" data-key="d">▶</button></div><div class="pad"><button class="mbtn" data-key="w">DODGE</button><button class="mbtn" data-key="j">SLASH</button><button class="mbtn" data-key="k">HEAVY</button></div></div>
+  </div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js';
+
+const canvas=document.getElementById('game'), statusEl=document.querySelector('#status'), comboEl=document.getElementById('combo');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x8e9aaa);scene.fog=new THREE.Fog(0x8e9aaa,15,38);
+const camera=new THREE.PerspectiveCamera(42,1,.1,100);camera.position.set(0,5.2,12);camera.lookAt(0,2.2,0);
+
+scene.add(new THREE.HemisphereLight(0xbfd5e8,0x403125,2.2));const sun=new THREE.DirectionalLight(0xffecd1,3.2);sun.position.set(-7,12,8);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-12;sun.shadow.camera.right=12;sun.shadow.camera.top=10;sun.shadow.camera.bottom=-10;scene.add(sun);
+
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(60,40),new THREE.MeshStandardMaterial({color:0x62685e,roughness:.92}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+// misty mountain arena
+the: for(let i=-16;i<=16;i+=4){const h=2+Math.random()*3;const m=new THREE.Mesh(new THREE.ConeGeometry(4+h*.3,h,5),new THREE.MeshStandardMaterial({color:0x53605d,roughness:1}));m.position.set(i,-.5,-15-Math.random()*8);scene.add(m)}
+for(let i=0;i<18;i++){const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.15+Math.random()*.35,0),new THREE.MeshStandardMaterial({color:0x454940,roughness:1}));rock.position.set((Math.random()-.5)*15,-.05,(Math.random()-.5)*5);rock.scale.y=.45;scene.add(rock)}
+
+function fighter(red=false){
+ const g=new THREE.Group(); const skin=new THREE.MeshStandardMaterial({color:red?0x7d5a48:0xb58c72,roughness:.7});
+ const cloth=new THREE.MeshStandardMaterial({color:red?0x16191d:0xede5d2,roughness:.85});const dark=new THREE.MeshStandardMaterial({color:red?0x4c1517:0x1c2528,roughness:.75});
+ const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.48,1.05,5,10),cloth);torso.position.y=2.05;torso.castShadow=true;g.add(torso);
+ const waist=new THREE.Mesh(new THREE.CylinderGeometry(.54,.44,.45,10),dark);waist.position.y=1.25;waist.castShadow=true;g.add(waist);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.38,16,12),skin);head.position.y=3.25;head.castShadow=true;g.add(head);
+ const hair=new THREE.Mesh(new THREE.SphereGeometry(.39,12,8,0,Math.PI*2,0,Math.PI*.55),dark);hair.position.y=3.38;g.add(hair);
+ function limb(x,y,len,r,mat){const m=new THREE.Mesh(new THREE.CapsuleGeometry(r,len,4,8),mat);m.position.set(x,y,0);m.castShadow=true;g.add(m);return m}
+ const la=limb(-.68,1.75,.75,.12,cloth),ra=limb(.68,1.75,.75,.12,cloth);la.rotation.z=.18;ra.rotation.z=-.18;
+ const ll=limb(-.28,.55,1.05,.16,dark),rl=limb(.28,.55,1.05,.16,dark);
+ // sword
+ const sword=new THREE.Group();const blade=new THREE.Mesh(new THREE.BoxGeometry(.07,1.55,.025),new THREE.MeshStandardMaterial({color:0xcbd1d2,metalness:.85,roughness:.22}));blade.position.y=.72;blade.castShadow=true;sword.add(blade);const guard=new THREE.Mesh(new THREE.BoxGeometry(.48,.06,.08),new THREE.MeshStandardMaterial({color:0x7a4d25,metalness:.7,roughness:.35}));guard.position.y=-.05;sword.add(guard);const hilt=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.5,8),dark);hilt.position.y=-.32;sword.add(hilt);sword.position.set(.72,1.7,.05);sword.rotation.z=-.35;g.add(sword);
+ g.userData={la,ra,ll,rl,sword,torso};g.scale.setScalar(.92);scene.add(g);return g;
+}
+const player=fighter(false), enemy=fighter(true);player.position.set(-3,0,0);enemy.position.set(3,0,0);
+
+const keys={}, state={active:false,over:false,ph:100,eh:100,combo:0,ecb:0,pAttack:0,eAttack:0,hitTimer:0};
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();keys[k]=true;if(k===' '&&!state.active&&!state.over)start();if(k===' '&&state.over)reset();});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+document.querySelectorAll('.mbtn').forEach(b=>{b.addEventListener('pointerdown',e=>{e.preventDefault();const k=b.dataset.key;if(!state.active)start();keys[k]=true});b.addEventListener('pointerup',()=>keys[b.dataset.key]=false)});
+function start(){state.active=true;statusEl.style.display='none'}
+function reset(){state.ph=100;state.eh=100;state.over=false;state.active=true;player.position.set(-3,0,0);enemy.position.set(3,0,0);statusEl.style.display='none';updateHud()}
+function updateHud(){document.getElementById('pHealth').style.width=state.ph+'%';document.getElementById('eHealth').style.width=state.eh+'%'}
+
+function slash(attacker,defender,heavy=false){const u=attacker.userData,d=performance.now();attacker.userData.attacking=d;attacker.userData.attackUntil=d+(heavy?650:360);attacker.userData.heavy=heavy;const dist=Math.abs(attacker.position.x-defender.position.x);if(dist<2.25){defender.userData.hit=heavy?16:9;defender.position.x+=attacker===player?.18:-.18;if(attacker===player){state.combo++;state.ecb=60;comboEl.textContent=state.combo>1?'×'+state.combo+'': 'HIT';comboEl.style.display='block'}else state.combo=0}}
+addEventListener('keydown',e=>{const k=e.key.toLower; if(k==='j'&&state.active&&performance.now()>(player.userData.attackUntil||0))slash(player,enemy,false);if(k==='k'&&state.active&&performance.now()>(player.userData.attackUntil||0))slash(player,enemy,true)});
+
+let last=performance.now(), aiTimer=0;
+function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.033);last=now;renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+ if(state.active&&!state.over){
+  const speed=3.2*dt;if(keys.a)player.position.x-=speed;if(keys.d)player.position.x+=speed;player.position.x=THREE.MathUtils.clamp(player.position.x,-7,7);
+  if(keys.w&&now>(player.userData.dodgeUntil||0)){player.userData.dodgeUntil=now+600;player.position.z=-1}
+  if(now>(player.userData.dodgeUntil||0))player.position.z*=.88;
+  aiTimer-=dt;if(aiTimer<=0&&enemy.position.x>player.position.x){aiTimer=.55+Math.random();const dist=enemy.position.x-player.position.x;if(dist>2.2)enemy.position.x-=1.25*dt;if(dist<2.3&&Math.random()<.7)slash(enemy,player,Math.random()<.25)}else enemy.position.x-=0.18*dt;
+ }
+ enemy.position.x=THREE.MathUtils.clamp(enemy.position.x,-7,7);player.lookAt(enemy.position.x,2.2,0);enemy.lookAt(player.position.x,2.2,0);
+ // idle and attack poses
+ [player,enemy].forEach((f,i)=>{const u=f.userData,t=(now*.003)*(i?1.05:1);u.torso.rotation.z=Math.sin(t)*.025;if(u.hit){u.torso.rotation.z=-.25*(i?1:-1);u.hit--}const attack=now<(u.attackUntil||0);if(attack){const p=(u.attackUntil-now)/(u.heavy?650:360);u.sword.rotation.z=-1.2+p*1.7;u.ra.rotation.z=-1.3+p*1.2}else{u.sword.rotation.z=-.35;u.ra.rotation.z=-.18}});
+ if(enemy.userData.hit){state.eh=Math.max(0,state.eh-(enemy.userData.hit>12?16:9));enemy.userData.hit=0;updateHud()}if(player.userData.hit){state.ph=Math.max(0,state.ph-(player.userData.hit>12?16:9));player.userData.hit=0;updateHud()}
+ if(state.ecb>0)state.ecb--;else comboEl.style.display='none';
+ if(state.ph<=0||state.eh<=0){state.active=false;state.over=true;const win=state.eh<=0;statusEl.innerHTML=`<h1>${win?'VICTORY':'DEFEAT'}</h1><p>PRESS SPACE TO REMATCH</p>`;statusEl.style.display='block'}
+ // cinematic camera
+ camera.position.x=THREE.MathUtils.lerp(camera.position.x,(player.position.x+enemy.position.x)*.15,.04);camera.lookAt((player.position.x+enemy.position.x)/2,2.1,0);
+ renderer.render(scene,camera)}
+requestAnimationFrame(animate);updateHud();
+</script>
+</body>
+</html>
