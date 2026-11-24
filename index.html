@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Frogger Adventure</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <div class="brand"><span class="frog-mark">🐸</span><span>FROGGER <b>ADVENTURE</b></span></div>
+      <div class="hud">
+        <div><small>SCORE</small><strong id="score">00000</strong></div>
+        <div><small>BEST</small><strong id="best">00000</strong></div>
+        <div><small>LEVEL</small><strong id="level">1</strong></div>
+        <div><small>LIVES</small><strong id="lives">♥♥♥</strong></div>
+      </div>
+    </header>
+
+    <section class="stage-wrap">
+      <canvas id="game" width="720" height="780" aria-label="Frogger Adventure game"></canvas>
+
+      <div id="overlay" class="overlay">
+        <div class="panel">
+          <div class="big-frog">🐸</div>
+          <p class="eyebrow">THE GREAT CROSSING</p>
+          <h1 id="overlayTitle">FROGGER<br><em>ADVENTURE</em></h1>
+          <p id="overlayText" class="subtitle">Guide your frog to safety!</p>
+          <button id="startBtn" class="start-btn">START ADVENTURE <span>→</span></button>
+          <div class="keys"><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd><span>Use arrow keys or WASD</span></div>
+        </div>
+      </div>
+
+      <div class="mobile-controls" aria-label="Movement controls">
+        <button data-dir="up" aria-label="Move up">▲</button>
+        <button data-dir="left" aria-label="Move left">◀</button>
+        <button data-dir="down" aria-label="Move down">▼</button>
+        <button data-dir="right" aria-label="Move right">▶</button>
+      </div>
+    </section>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>

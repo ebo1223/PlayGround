@@ -1,0 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Nunito:wght@700;800;900&display=swap');
+:root { --ink:#102d24; --cream:#f8efd2; --gold:#f4b64d; --green:#69bd62; }
+* { box-sizing:border-box; }
+body { margin:0; min-height:100vh; overflow:hidden; background:#102f27; color:#fff; font-family:'Nunito',sans-serif; }
+body:before { content:""; position:fixed; inset:0; background:radial-gradient(circle at 50% 20%, #315e46 0, #173c31 48%, #0d2721 100%); z-index:-2; }
+.game-shell { width:min(100vw, 920px); height:100vh; margin:auto; display:flex; flex-direction:column; border-left:1px solid #b5d18133; border-right:1px solid #b5d18133; background:#174236; box-shadow:0 0 60px #06130f88; }
+.topbar { height:78px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 28px; background:linear-gradient(90deg,#18392f,#27523e); border-bottom:4px solid #0d2922; }
+.brand { display:flex; align-items:center; gap:10px; font-family:'Black Han Sans',sans-serif; font-size:20px; letter-spacing:-1px; }
+.brand b { color:#f5b94d; }.frog-mark { width:43px; height:43px; display:grid; place-items:center; border-radius:50%; background:#79c95d; border:3px solid #d8ed9b; font-size:24px; }
+.hud { display:flex; align-items:center; gap:22px; }.hud div { min-width:58px; text-align:right; }.hud small { display:block; color:#b1cfae; font-size:10px; letter-spacing:1.5px; }.hud strong { color:#fff4bd; font-size:19px; }#lives { color:#ff8068; letter-spacing:-1px; }
+.stage-wrap { position:relative; flex:1; min-height:0; display:flex; justify-content:center; background:#183a2e; }
+canvas { display:block; height:100%; width:auto; max-width:100%; image-rendering:auto; }
+.overlay { position:absolute; inset:0; display:grid; place-items:center; background:linear-gradient(120deg,rgba(8,39,31,.82),rgba(35,83,57,.72)); backdrop-filter:blur(3px); transition:.25s; }
+.overlay.hidden { opacity:0; pointer-events:none; }
+.panel { width:min(420px,82%); text-align:center; }.big-frog { font-size:68px; filter:drop-shadow(0 10px 0 #0d3529); margin-bottom:-5px; }.eyebrow { color:#b8d38b; font-size:12px; letter-spacing:4px; margin:8px 0 4px; font-weight:900; }
+h1 { margin:0; font-family:'Black Han Sans',sans-serif; font-size:58px; line-height:.84; letter-spacing:-3px; text-shadow:0 5px 0 #0e3328,0 9px 20px #091b16; }h1 em { color:#f5bd55; font-style:normal; }
+.subtitle { color:#dce7c8; margin:19px 0 18px; }.start-btn { border:0; border-bottom:6px solid #c77a32; border-radius:12px; background:#f3aa49; color:#5e321e; font-family:'Nunito'; font-weight:900; font-size:15px; letter-spacing:.5px; padding:15px 28px; cursor:pointer; box-shadow:0 12px 30px #08241b55; }.start-btn:hover { transform:translateY(-2px); filter:brightness(1.06); }.start-btn span { margin-left:12px; font-size:19px; }
+.keys { margin-top:19px; display:flex; align-items:center; justify-content:center; gap:5px; color:#b9cbaa; font-size:11px; }.keys kbd { width:27px;height:27px;display:grid;place-items:center;border:1px solid #92a98c;border-bottom-width:3px;border-radius:5px;color:#dbe7cf;background:#1d4939;font-family:inherit; }.keys span { margin-left:7px; }
+.mobile-controls { display:none; position:absolute; left:50%; bottom:12px; transform:translateX(-50%); grid-template-columns:repeat(3,44px); grid-template-rows:repeat(2,44px); gap:5px; opacity:.78; }.mobile-controls button { border:1px solid #d7ecb1; border-radius:10px; background:#183e32cc; color:white; font-size:16px; }.mobile-controls button[data-dir="up"] { grid-column:2 }.mobile-controls button[data-dir="left"] { grid-column:1 }.mobile-controls button[data-dir="down"] { grid-column:2 }.mobile-controls button[data-dir="right"] { grid-column:3 }
+@media (max-width:700px),(pointer:coarse) { body { overflow:hidden }.topbar { height:58px;padding:0 10px }.brand {font-size:14px}.frog-mark{width:34px;height:34px;font-size:19px}.hud{gap:7px}.hud div{min-width:42px}.hud small{font-size:8px}.hud strong{font-size:14px}.mobile-controls{display:grid}.keys{display:none}h1{font-size:46px}.big-frog{font-size:48px}.game-shell{width:100vw}.stage-wrap{padding-bottom:0} }
