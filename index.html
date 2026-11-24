@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Frogger Adventure</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-leaf"></span><strong>FROGGER</strong><em>ADVENTURE</em></div>
+      <div class="stats">
+        <div><span>SCORE</span><b id="score">0000</b></div>
+        <div><span>BEST</span><b id="best">0000</b></div>
+        <div><span>LIVES</span><b class="hearts" id="lives">♥ ♥ ♥</b></div>
+      </div>
+      <button id="soundBtn" class="icon-btn" aria-label="Toggle sound">♪</button>
+    </header>
+
+    <section class="stage-wrap">
+      <canvas id="game" width="960" height="640" aria-label="Frogger Adventure game"></canvas>
+      <div id="overlay" class="overlay">
+        <div class="overlay-card">
+          <div class="frog-logo">🐸</div>
+          <p class="eyebrow">THE JOURNEY BEGINS</p>
+          <h1 id="overlayTitle">Frogger<br><span>Adventure</span></h1>
+          <p id="overlayText">Hop across the roads and rivers.<br>Reach the five lily pads!</p>
+          <button id="startBtn" class="primary-btn">START ADVENTURE <b>→</b></button>
+          <div class="controls"><kbd>WASD</kbd><span>or</span><kbd>ARROWS</kbd><span>to hop</span></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="bottombar">
+      <div class="goal-progress"><span>GOALS</span><div id="goalDots" class="goal-dots"></div></div>
+      <div id="status" class="status">Ready for adventure</div>
+      <button id="pauseBtn" class="pause-btn">Ⅱ <span>PAUSE</span></button>
+    </footer>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
