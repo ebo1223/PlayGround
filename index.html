@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Samurai Duel</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2311161a'/%3E%3Cpath d='M14 44L47 11l6 6-33 33z' fill='%23d7c596'/%3E%3C/svg%3E">
+  <style>
+    :html, body { height:100%; }
+    * { box-sizing:border-box; }
+    body { margin:0; overflow:hidden; background:#090c12; color:#f5ead2; font-family:Georgia,serif; }
+    canvas { display:block; width:100%; height:100%; }
+    #hud { position:fixed; inset:0; pointer-events:none; z-index:5; }
+    .top { position:absolute; top:24px; left:50%; transform:translateX(-50%); width:min(760px,72vw); }
+    .title { text-align:center; font-size:12px; letter-spacing:.42em; text-transform:uppercase; color:#dbcba8; margin-bottom:10px; text-shadow:0 2px 8px #000; }
+    .bars { display:grid; grid-template-columns:1fr 90px 1fr; align-items:center; gap:14px; }
+    .barwrap { height:10px; border:1px solid rgba(240,220,175,.5); background:rgba(0,0,0,.48); transform:skewX(-18deg); overflow:hidden; }
+    #enemyBar,#playerBar { height:100%; width:100%; background:linear-gradient(90deg,#6a1012,#cf2f26); transition:width .16s; }
+    #playerBar { margin-left:auto; background:linear-gradient(90deg,#9a8052,#dfc98a); }
+    .round { height:48px; width:48px; border:1px solid rgba(220,200,150,.55); border-radius:50%; display:grid; place-items:center; background:rgba(8,10,13,.72); font-size:20px; }
+    .labels { display:flex; justify-content:space-between; margin:0 4px 5px; font-family:Arial,sans-serif; font-size:10px; letter-spacing:.18em; color:#aa9d82; }
+    #stance { position:absolute; bottom:32px; left:50%; transform:translateX(-50%); text-align:center; }
+    #stanceName { font-size:13px; letter-spacing:.28em; text-transform:uppercase; }
+    #stanceTrack { width:200px; height:3px; background:rgba(255,255,255,.12); margin-top:8px; }
+    #stanceFill { height:100%; width:100%; background:#d9c18c; transform-origin:left; }
+    #controls { position:absolute; right:28px; bottom:26px; font:10px/1.9 Arial,sans-serif; letter-spacing:.12em; color:rgba(235,225,202,.62); text-align:right; }
+    #message { position:absolute; left:50%; top:42%; transform:translate(-50%,-50%); text-align:center; opacity:0; transition:opacity .25s; }
+    #message b { display:block; font-size:56px; letter-spacing:.16em; text-shadow:0 4px 20px #000; }
+    #message span { display:block; margin-top:12px; font:11px Arial,sans-serif; letter-spacing:.3em; color:#d0bd96; }
+    #overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle,rgba(12,17,24,.2),rgba(5,7,10,.78)); pointer-events:auto; }
+    .card { text-align:center; animation:rise .7s ease-out; }
+    .eyebrow { font:10px Arial,sans-serif; letter-spacing:.55em; color:#b9a981; margin-bottom:14px; }
+    h1 { margin:0; font-size:clamp(44px,7vw,86px); font-weight:normal; letter-spacing:.09em; line-height:.9; text-shadow:0 5px 30px #000; }
+    .sub { margin:18px 0 28px; color:#bcb090; font-size:13px; letter-spacing:.12em; }
+    button { pointer-events:auto; border:1px solid #c7b482; background:rgba(18,20,20,.82); color:#eadbb4; height:46px; padding:0 30px; font:11px Arial,sans-serif; letter-spacing:.25em; cursor:pointer; }
+    button:hover { background:#c7b482; color:#151515; }
+    @keyframes rise { from { opacity:0; transform:translateY(18px); } }
+    @media(max-width:700px){ .top{top:12px;width:94vw}.round{height:38px;width:38px}.bars{grid-template-columns:1fr 46px 1fr}.labels{font-size:8px}#controls{display:none}#stance{bottom:18px}.title{margin-bottom:6px}.card h1{font-size:48px} }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <div class="top"><div class="title">Moonlit Duel</div><div class="labels"><span>THE SHOGUN'S BLADE</span><span>RONIN</span></div><div class="bars"><div class="barwrap"><div id="enemyBar"></div></div><div class="round"><span id="round">I</span></div><div class="barwrap"><div id="playerBar"></div></div></div></div>
+    <div id="stance"><div id="stanceName">Balanced</div><div id="stanceTrack"><div id="stanceFill"></div></div></div>
+    <div id="controls">WASD / ARROWS  MOVE<br>J / MOUSE  ATTACK<br>K / SPACE  BLOCK</div>
+    <div id="message"><b>VICTORY</b><span>THE CIRCLE IS COMPLETE</span></div>
+    <div id="overlay"><div class="card"><div class="eyebrow">ONE BLADE · ONE HONOR</div><h1>SAMURAI<br>DUEL</h1><div class="sub">Defeat the Shogun's champion beneath the moon</div><button id="start">DRAW YOUR BLADE</button></div></div>
+  </div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+const renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight); renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap; renderer.outputColorSpace=THREE.SRGBColorSpace; document.body.prepend(renderer.domElement);
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x090d12); scene.fog=new THREE.FogExp2(0x090d12,.025);
+const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,150); camera.position.set(0,7.5,13.5);
+scene.add(new THREE.HemisphereLight(0x91a4b4,.95,1.35)); const moon=new THREE.DirectionalLight(0xc8d6df,3.5); moon.position.set(-8,16,7); moon.castShadow=true; moon.shadow.mapSize.set(1024,1024); scene.add(moon); const rim=new THREE.DirectionalLight(0xa52a30,1.35); rim.position.set(8,5,-8); scene.add(rim); const warm=new THREE.PointLight(0xd9b978,1.4,30); warm.position.set(0,5,8); scene.add(warm);
+// arena
+const ground=new THREE.Mesh(new THREE.CircleGeometry(11,64),new THREE.MeshStandardMaterial({color:0x1b201d,roughness:.9})); ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+for(let i=0;i<64;i++){const a=i/64*Math.PI*2,r=10.5+(i%4)*.18;const rock=new THREE.Mesh(new THREE.BoxGeometry(.08,.025,.18),new THREE.MeshStandardMaterial({color:i%3?0x30342f:0x171914}));rock.position.set(Math.cos(a)*r,.02,Math.sin(a)*r);rock.rotation.y=a;scene.add(rock)}
+for(let i=-2;i<=2;i++){const line=new THREE.Mesh(new THREE.RingGeometry(6.2+i*.01,6.25+i*.01,64),new THREE.MeshBasicMaterial({color:0x9a927b,transparent:true,opacity:.18,side:THREE.DoubleSide}));line.rotation.x=-Math.PI/2;line.position.y=.015+i*.001;scene.add(line)}
+// mountains / pagoda silhouette
+const moonMesh=new THREE.Mesh(new THREE.CircleGeometry(2.1,48),new THREE.MeshBasicMaterial({color:0xdde3dc}));moonMesh.position.set(-10,14,-28);scene.add(moonMesh);
+for(let i=0;i<18;i++){const h=3+Math.random()*5,w=3+Math.random()*3;const m=new THREE.Mesh(new THREE.ConeGeometry(w,h,5),new THREE.MeshStandardMaterial({color:0x111820,roughness:1}));m.position.set(-22+i*2.7,h/2-1,-22-Math.random()*8);scene.add(m)}
+const torii=new THREE.Group();const mat=new THREE.MeshStandardMaterial({color:0x361416,roughness:.8});for(const x of [-4,4]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.18,.25,5.5,8),mat);p.position.set(x,2.75,-13);p.castShadow=true;torii.add(p)}const beam=new THREE.Mesh(new THREE.BoxGeometry(10,.35,.55),mat);beam.position.set(0,5.7,-13);torii.add(beam);beam.rotation.z=.02;scene.add(torii);
+// fighters
+function fighter(red=false){const g=new THREE.Group();const cloth=red?0x5b1516:0x1c2525,armor=red?0x9b2923:0x353b3a,skin=0xb79a78;
+const body=new THREE.Mesh(new THREE.CylinderGeometry(.48,.38,1.45,8),new THREE.MeshStandardMaterial({color:cloth,roughness:.75}));body.position.y=1.85;body.castShadow=true;g.add(body);
+const head=new THREE.Mesh(new THREE.SphereGeometry(.34,12,8),new THREE.MeshStandardMaterial({color:skin,roughness:.8}));head.position.y=2.95;head.castShadow=true;g.add(head);
+const mask=new THREE.Mesh(new THREE.BoxGeometry(.62,.28,.12),new THREE.MeshStandardMaterial({color:red?0x241313:0x15191a}));mask.position.set(0,2.92,.28);g.add(mask);
+const helm=new THREE.Mesh(new THREE.SphereGeometry(.38,12,6,0,Math.PI*2,0,Math.PI*.62),new THREE.MeshStandardMaterial({color:armor,roughness:.55,metalness:.25}));helm.position.y=3.05;helm.castShadow=true;g.add(helm);
+for(const x of [-.28,.28]){const shoulder=new THREE.Mesh(new THREE.SphereGeometry(.38,8,6),new THREE.MeshStandardMaterial({color:armor,roughness:.55,metalness:.25}));shoulder.position.set(x,2.38,.05);shoulder.scale.set(1.25,.45,.8);shoulder.castShadow=true;g.add(shoulder)}
+for(const x of [-.25,.25]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.16,.12,1.25,8),new THREE.MeshStandardMaterial({color:0x171918,roughness:.9}));leg.position.set(x,.65,0);leg.castShadow=true;g.add(leg)}
+const sword=new THREE.Group();const hilt=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.75,8),new THREE.MeshStandardMaterial({color:0x151515,roughness:.5}));hilt.rotation.z=Math.PI/2*hilt.rotation.z;hilt.position.x=.38;sword.add(hilt);const blade=new THREE.Mesh(new THREE.BoxGeometry(.08,.06,1.7),new THREE.MeshStandardMaterial({color:0xdde0dc,roughness:.2,metalness:.85}));blade.position.set(.38,0,.85);blade.geometry.translate(.02,.03,.85);sword.add(blade);const guard=new THREE.Mesh(new THREE.BoxGeometry(.22,.06,.22),new THREE.MeshStandardMaterial({color:0x9c7b3d,metalness:.7}));guard.position.set(.38,0,.1);sword.add(guard);g.add(sword);g.userData.sword=sword;g.userData.body=body;
+return g}
+const player=fighter(false),enemy=fighter(true);player.position.set(0,0,4);enemy.position.set(0,0,-4);scene.add(player,enemy);
+player.rotation.y=0;enemy.rotation.y=Math.PI;
+let started=false,over=false,attackTimer=0,enemyAttack=0,block=false,enemyBlock=false,stamina=100,enemyHp=100,playerHp=100,keys={};
+function face(a,b){a.lookAt(b.position.x,1.8,b.position.z)}
+const start=document.getElementById('start'),overlay=document.getElementById('overlay');start.onclick=()=>{overlay.style.display='none';started=true};
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key===' ')block=true;if(e.key.toLowerCase()==='j')swing()});addEventListener('keyup',e=>{keys[e.key.toLowerKey()]=false});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(e.key===' ')block=false});
+addEventListener('mousedown',()=>swing());
+function swing(){if(!started||over||attackTimer>0||stamina<18)return;attackTimer=.48;stamina-=18;player.userData.sword.rotation.z=-.9;}
+function reset(){enemyHp=playerHp=100;enemy.position.set(0,0,-4);player.position.set(0,0,4);stamina=100;over=false;started=true;document.getElementById('message').style.opacity=0;overlay.style.display='none'}
+function end(win){over=true;started=false;const m=document.getElementById('message');m.querySelector('b').textContent=win?'VICTORY':'DEFEAT';m.querySelector('span').textContent=win?'THE CIRCLE IS COMPLETE':'HONOR REQUIRES ANOTHER DUEL';m.style.opacity=1;m.style.pointerEvents='auto';setTimeout(()=>{overlay.style.display='flex';overlay.querySelector('button').textContent='DUEL AGAIN';overlay.querySelector('button').onclick=reset},900)}
+function updateHud(){document.getElementById('enemyBar').style.width=enemyHp+'%';document.getElementById('playerBar').style.width=playerHp+'%';document.getElementById('stanceName').textContent=block?'Guarding':'Balanced';document.getElementById('stanceFill').style.width=stamina+'%'}
+const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.033);
+if(started&&!over){let vx=0,vz=0;if(keys.w||keys.arrowup)vz-=1;if(keys.s||keys.arrowdown)vz+=1;if(keys.a||keys.arrowleft)vx-=1;if(keys.d||keys.arrowright)vx+=1;const len=Math.hypot(vx,vz)||1;player.position.x+=vx/len*dt*3.1;player.position.z+=vz/len*dt*3.1;player.position.x=Math.max(-7.8,Math.min(7.8,player.position.x));player.position.z=Math.max(-7.8,Math.min(7.8,player.position.z));block=keys[' '];if(!block)stamina=Math.min(100,stamina+dt*14);else stamina=Math.min(100,stamina+dt*5);
+face(player,enemy);face(enemy,player);
+if(attackTimer>0){attackTimer-=dt;player.userData.sword.rotation.z=-.9+Math.sin((.48-attackTimer)/.48*Math.PI)*2.2;const d=player.position.distanceTo(enemy.position);if(d<2.15&&attackTimer>.24&&attackTimer<.34&&Math.abs((attackTimer-.29))<.11){enemyHp=Math.max(0,enemyHp-(enemyBlock?4:12));enemyBlock=false;if(enemyHp<=0)end(true)}}else player.userData.sword.rotation.z*=.9;
+const dist=player.position.distanceTo(enemy.position);enemyAttack-=dt;if(dist<3.2&&enemyAttack<=0){enemyAttack=1.05+Math.random()*.55;enemyBlock=Math.random()<.25;enemy.userData.sword.rotation.z=-1;setTimeout(()=>enemy.userData.sword.rotation.z=0,260);if(dist<2.15){if(block)playerHp=Math.max(0,playerHp-2);else playerHp=Math.max(0,playerHp-(enemyBlock?3:9));if(playerHp<=0)end(false)}}else if(dist>2.1&&dist<8){const dx=player.position.x-enemy.position.x,dz=player.position.z-enemy.position.z;const l=Math.hypot(dx,dz)||1;enemy.position.x+=dx/l*dt*(.9+Math.random()*0.15);enemy.position.z+=dz/l*dt*(.9+Math.random()*0.15)} }
+updateHud();camera.position.x+=(player.position.x*.18-camera.position.x)*.04;camera.lookAt(player.position.x*.15,1.8,0);renderer.render(scene,camera)}animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script>
+</body>
+</html>
