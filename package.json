@@ -1,1 +1,0 @@
-{"name":"samurai-duel","private":true,"scripts":{"build":"node -e \"const fs=require('node:fs');fs.mkdirSync('dist',{recursive:true});fs.copyFileSync('index.html','dist/index.html')\""},"dependencies":{"serve":"^14.2.4"}}
