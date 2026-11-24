@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Asteroid Blaster 3D</title>
+  <style>
+    :root { color-scheme: dark; --cyan:#66e9ff; --amber:#ffbe55; }
+    * { box-sizing:border-box; }
+    html, body { width:100%; height:100%; margin:0; overflow:hidden; background:#02040b; font-family:"Trebuchet MS",Arial,sans-serif; }
+    canvas { display:block; width:100%; height:100%; }
+    #hud { position:fixed; inset:0; pointer-events:none; color:white; text-shadow:0 2px 8px #000; }
+    #topbar { position:absolute; left:24px; right:24px; top:18px; display:flex; justify-content:space-between; align-items:flex-start; }
+    .stat { font-size:13px; letter-spacing:2px; color:#9fb3c9; }
+    .value { display:block; margin-top:3px; font-size:28px; line-height:1; color:white; letter-spacing:1px; }
+    #health { width:210px; }
+    #healthLabel { display:flex; justify-content:space-between; color:#9fb3c9; }
+    #healthTrack { height:9px; margin-top:7px; border:1px solid #6bd4e9; background:#07131b; transform:skewX(-15deg); box-shadow:0 0 12px #22a4c455; }
+    #healthFill { height:100%; width:100%; background:linear-gradient(90deg,#50e4ff,#b5f5ff); box-shadow:0 0 12px #66e9ff; transition:width .15s; }
+    #combo { position:absolute; right:28px; top:100px; text-align:right; opacity:0; transition:.18s; }
+    #combo.show { opacity:1; }
+    #comboNum { color:var(--amber); font-size:36px; font-weight:bold; }
+    #crosshair { position:absolute; left:50%; top:50%; width:30px; height:30px; margin:-15px; border:1px solid #aef4ff88; border-radius:50%; }
+    #crosshair:before,#crosshair:after { content:""; position:absolute; background:#cafaff; box-shadow:0 0 6px #66e9ff; }
+    #crosshair:before { width:8px; height:1px; left:10px; top:14px; }
+    #crosshair:after { width:1px; height:8px; left:14px; top:10px; }
+    #centerMsg { position:absolute; left:50%; top:56%; transform:translate(-50%,0); text-align:center; letter-spacing:5px; color:#bfefff; font-size:13px; }
+    #overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:radial-gradient(circle,#071522cc 0,#02040bc9 55%,#02040b 100%); transition:.25s; }
+    #overlay.hidden { opacity:0; visibility:hidden; }
+    .panel { width:min(560px,calc(100% - 36px)); text-align:center; }
+    h1 { margin:0 0 8px; font-size:clamp(42px,8vw,82px); line-height:.85; letter-spacing:-3px; font-style:italic; text-transform:uppercase; }
+    h1 span { display:block; color:var(--cyan); font-size:.54em; letter-spacing:14px; margin-top:15px; }
+    .subtitle { color:#8192a5; letter-spacing:4px; font-size:12px; margin:28px 0; }
+    button { pointer-events:auto; border:1px solid #72dcf1; background:linear-gradient(135deg,#163844,#091821); color:white; padding:15px 38px; font:700 13px "Trebuchet MS"; letter-spacing:3px; text-transform:uppercase; cursor:pointer; box-shadow:0 0 24px #3bd6ef33,inset 0 0 16px #91edff11; clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px); }
+    button:hover { background:linear-gradient(135deg,#277188,#102b39); }
+    #controls { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:26px; color:#8398a9; font-size:11px; letter-spacing:1px; }
+    kbd { border:1px solid #71859a; border-radius:3px; padding:3px 6px; color:#d8edff; margin-right:5px; }
+    #mute { position:absolute; right:25px; bottom:20px; pointer-events:auto; border:0; background:none; color:#91a6b7; padding:6px; font-size:10px; }
+    @media (max-width:700px) { #health{width:130px}.value{font-size:21px}#topbar{left:12px;right:12px}#controls{display:none} }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="hud">
+    <div id="topbar">
+      <div class="stat">SCORE <span class="value" id="score">000000</span></div>
+      <div id="health"><div id="healthLabel"><span>HULL</span><span id="healthPct">100%</span></div><div id="healthTrack"><div id="healthFill"></div></div></div>
+    </div>
+    <div id="combo"><span class="stat">CHAIN</span><div id="comboNum">x2</div></div>
+    <div id="crosshair"></div>
+    <div id="centerMsg"></div>
+    <div id="controls"><span><kbd>A</kbd><kbd>D</kbd> MOVE</span><span><kbd>SPACE</kbd> FIRE</span><span><kbd>P</kbd> PAUSE</span></div>
+    <button id="mute">SOUND ON</button>
+  </div>
+  <div id="overlay">
+    <div class="panel">
+      <h1>Asteroid <span>Blaster 3D</span></h1>
+      <div class="subtitle" id="subtitle">SURVIVE THE BELT</div>
+      <button id="start">Launch Mission</button>
+    </div>
+  </div>
+<script>
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+let W=innerWidth,H=innerHeight,DPR=Math.min(devicePixelRatio,2);
+function resize(){W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)} addEventListener('resize',resize);resize();
+const $=id=>document.getElementById(id), keys={};
+let running=false,paused=false,score=0,health=100,combo=1,comboTimer=0,shots=[],asteroids=[],particles=[],stars=[],time=0,spawnTimer=0,shake=0;
+
+class AudioEngine{constructor(){this.ctx=null;this.on=true} init(){if(!this.ctx)this.ctx=new (window.AudioContext||window.webkitAudioContext)()} tone(freq,dur,type='sine',gain=.08){if(!this.on)return;this.init();let o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type=type;o.frequency.setValueAtTime(freq,this.ctx.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(30,freq*.35),this.ctx.currentTime+dur);g.gain.setValueAtTime(gain,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+dur);o.connect(g).connect(this.ctx.destination);o.start();o.stop(this.ctx.currentTime+dur)} }
+const audio=new AudioEngine();
+function initStars(){stars=[];for(let i=0;i<180;i++)stars.push({x:Math.random()*W,y:Math.random()*H,z:Math.random()*.9+.1,s:Math.random()*1.5+.3})}
+initStars();
+const rand=(a,b)=>a+Math.random*(b-a);
+function spawnAsteroid(){let r=rand(24,55)*(1+Math.min(score/80000,.25));asteroids.push({x:rand(-W*.44,W*.44),y:-r-20,z:rand(.55,1),r,rot:Math.random()*6.28,spin:rand(-1,1),speed:rand(95,175)+score*.002,shape:Array.from({length:10},(_,i)=>rand(.72,1.12)),hp:r>48?2:1,glow:Math.random()>.75})}
+function makeExplosion(x,y,color='#66e9ff',n=18){for(let i=0;i<n;i++){let a=Math.random()*6.28,s=rand(30,220);particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(.35,.9),max:1,color,size:rand(1,3)})}}
+function reset(){score=0;health=100;combo=1;comboTimer=0;shots=[];asteroids=[];particles=[];spawnTimer=.5;time=0;updateHUD()}
+function updateHUD(){ $('score').textContent=String(Math.floor(score)).padStart(6,'0');$('healthFill').style.width=health+'%';$('healthPct').textContent=Math.ceil(health)+'%';$('comboNum').textContent='x'+combo;$('combo').classList.toggle('show',combo>1)}
+addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Enter'&&!running)start();if(e.code==='KeyP'&&running){paused=!paused;$('centerMsg').textContent=paused?'PAUSED':' '} });
+addEventListener('keyup',e=>keys[e.code]=false);
+$('mute').onclick=()=>{audio.on=!audio.on;$('mute').textContent=audio.on?'SOUND ON':'SOUND OFF'};
+$('start').onclick=start;
+function start(){audio.init();reset();running=true;paused=false;$('overlay').classList.add('hidden');$('centerMsg').textContent=''}
+let player={x:0,y:0,targetX:0,fire:0};
+function shoot(){shots.push({x:player.x,y:H*.78,vx:rand(-12,12),vy:-820,life:1});audio.tone(520,.09,'triangle',.035)}
+function projectileHit(s,a){let dx=s.x-(W/2+a.x),dy=s.y-(H*.62+a.y*0.05);return dx*dx+dy*dy<(a.r*.72)*(a.r*.72)}
+function endGame(){running=false;$('subtitle').textContent='FINAL SCORE '+String(Math.floor(score)).padStart(6,'0');$('start').textContent='Retry Mission';$('overlay').classList.remove('hidden')}
+let last=performance.now();
+function loop(now){let dt=Math.min((now-last)/1000,.033);last=now;if(running&&!paused)update(dt);draw();requestAnimationFrame(loop)}
+function update(dt){time+=dt;if(keys.ArrowLeft||keys.KeyA)player.targetX-=420*dt;if(keys.ArrowRight||keys.KeyD)player.targetX+=420*dt;player.targetX=Math.max(-W*.38,Math.min(W*.38,player.targetX));player.x+=(player.targetX-player.x)*Math.min(1,dt*10);player.y=H*.78;
+player.fire-=dt;if((keys.Space||keys.KeyW)&&player.fire<=0){shoot();player.fire=.12}
+spawnTimer-=dt;if(spawnTimer<=0){spawnAsteroid();spawnTimer=Math.max(.25,.72-score/100000)}
+for(let s of stars){s.y+=28*s.z*dt;if(s.y>H)s.y-=H;if(s.x>W)s.x-=W}
+for(let s of shots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt}
+shots=shots.filter(s=>s.life>0&&s.y>-30);
+for(let a of asteroids){a.y+=a.speed*dt;a.rot+=a.spin*dt;a.x+=Math.sin(time*a.spin+a.rot)*8*dt;if(a.y>a.r+H*.77){health-=14;shake=12;makeExplosion(W/2+a.x,H*.78,'#ff684d',12);a.dead=true;combo=1;updateHUD();audio.tone(90,.25,'sawtooth',.07)}
+ for(let s of shots){if(!a.dead&&!s.dead&&projectileHit(s,a)){s.dead=true;a.hp--;comboTimer=1.8;combo=Math.min(8,combo+1);score+=25*combo;makeExplosion(s.x,s.y,a.glow?'#ffb55c':'#77ecff',10);audio.tone(180+combo*35,.12,'square',.025);if(a.hp<=0){a.dead=true;score+=Math.round(a.r*3)*combo;makeExplosion(W/2+a.x,a.y*1+a.r*.2,'#ffae55',22);shake=5}}}}
+asteroids=asteroids.filter(a=>!a.dead&&a.y<H+100);shots=shots.filter(s=>!s.dead);
+comboTimer-=dt;if(comboTimer<=0&&combo>1){combo=1;updateHUD()}
+for(let p of particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.98;p.vy*=.98}particles=particles.filter(p=>p.life>0);
+shake*=.88;if(shake<.2)shake=0;updateHUD();if(health<=0)endGame()}
+function draw(){ctx.clearRect(0,0,W,H);let bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#020617');bg.addColorStop(.48,'#061421');bg.addColorStop(1,'#02040b');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+ctx.save();if(shake){ctx.translate((Math.random-.5)*shake,(Math.random-.5)*shake)}
+for(let s of stars){ctx.globalAlpha=.25+s.z*.65;ctx.fillStyle=s.z>.8?'#b8efff':'#58728b';ctx.fillRect(s.x,s.y,s.s,s.s*(1+s.z*2))}ctx.globalAlpha=1;
+// nebula
+let g=ctx.createRadialGradient(W*.72,H*.25,10,W*.72,H*.25,W*.38);g.addColorStop(0,'#123c6655');g.addColorStop(.5,'#10244222');g.addColorStop(1,'#0000');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+// perspective grid
+ctx.strokeStyle='#2e9fb52a';ctx.lineWidth=1;let horizon=H*.55;for(let i=-10;i<=10;i++){ctx.beginPath();ctx.moveTo(W/2+i*W*.012,horizon);ctx.lineTo(W/2+i*W*.09,H);ctx.stroke()}for(let i=0;i<12;i++){let q=i/11,y=horizon+(H-horizon)*q*q;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+// asteroids
+for(let a of asteroids){let px=W/2+a.x,py=a.y;ctx.save();ctx.translate(px,py);ctx.rotate(a.rot);ctx.beginPath();for(let i=0;i<a.shape.length;i++){let ang=i/a.shape.length*6.28,r=a.r*a.shape[i],x=Math.cos(ang)*r,y=Math.sin(ang)*r;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.closePath();let ag=ctx.createRadialGradient(-a.r*.3,-a.r*.35,2,0,0,a.r);ag.addColorStop(0,a.glow?'#bca58b':'#88939a');ag.addColorStop(.35,'#596269');ag.addColorStop(1,'#171c22');ctx.fillStyle=ag;ctx.fill();ctx.strokeStyle='#abb4b5';ctx.lineWidth=1;ctx.stroke();ctx.fillStyle='#23292e';for(let i=0;i<5;i++){let ang=i*1.7+a.rot*.2,r=a.r*.45;ctx.beginPath();ctx.arc(Math.cos(ang)*r,Math.sin(ang)*r,a.r*.09,0,6.28);ctx.fill()}ctx.restore()}
+// player ship
+let px=W/2+player.x,py=player.y;ctx.save();ctx.translate(px,py);ctx.rotate(-player.x/W*.08);let flame=18+Math.random()*10;let fg=ctx.createLinearGradient(0,14,0,14+flame);fg.addColorStop(0,'#fff');fg.addColorStop(.25,'#66eaff');fg.addColorStop(1,'#1486dd00');ctx.fillStyle=fg;ctx.beginPath();ctx.moveTo(-8,18);ctx.lineTo(0,18+flame);ctx.lineTo(8,18);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(0,-28);ctx.lineTo(24,20);ctx.lineTo(8,15);ctx.lineTo(0,22);ctx.lineTo(-8,15);ctx.lineTo(-24,20);ctx.closePath();ctx.fillStyle='#b7cad4';ctx.fill();ctx.strokeStyle='#72dfef';ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle='#183a47';ctx.beginPath();ctx.moveTo(-7,-8);ctx.lineTo(0,-20);ctx.lineTo(7,-8);ctx.lineTo(4,5);ctx.lineTo(-4,5);ctx.closePath();ctx.fill();ctx.restore();
+// shots
+ctx.save();ctx.globalCompositeOperation='lighter';for(let s of shots){let lg=ctx.createLinearGradient(s.x,s.y,s.x,s.y+28);lg.addColorStop(0,'#fff');lg.addColorStop(.4,'#91efff');lg.addColorStop(1,'#4abfff00');ctx.strokeStyle=lg;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.x,s.y+26);ctx.stroke()}ctx.restore();
+for(let p of particles){ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.size,p.size)}ctx.globalAlpha=1;ctx.restore();
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
