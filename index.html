@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Alphabet Adventure</title>
+  <style>
+    :root { --ink:#18304a; --cream:#fffaf0; --sky:#8dd7f2; --yellow:#ffd45c; --coral:#ff7163; --green:#59c89a; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; overflow:hidden; font-family:"Trebuchet MS",system-ui,sans-serif; color:var(--ink); background:#aee8fb; }
+    button { font:inherit; }
+    #game { height:100vh; position:relative; overflow:hidden; background:linear-gradient(#78cef2 0 62%, #79cf9a 62% 68%, #58bd81 68% 100%); }
+    .cloud { position:absolute; width:120px; height:38px; border-radius:40px; background:white; opacity:.9; box-shadow:35px -22px 0 2px white,68px 4px 0 -4px white; }
+    .c1 { top:70px; left:8%; }.c2 { top:130px; right:12%; transform:scale(.72); }.c3 { top:42px; left:62%; transform:scale(.55); }
+    .hill { position:absolute; bottom:30%; width:44%; height:19%; border-radius:50% 50% 0 0; background:#54bd78; }.hill.a { left:-12%; }.hill.b { right:-12%; background:#65c981; }
+    .topbar { position:absolute; z-index:20; top:18px; left:22px; right:22px; display:flex; align-items:center; justify-content:space-between; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:900; font-size:22px; color:#fff; text-shadow:0 3px 0 #3a87a5, 0 4px 10px #397d93; }
+    .logo { width:48px; height:48px; display:grid; place-items:center; border:4px solid white; border-radius:15px; background:var(--yellow); color:#e46f58; transform:rotate(-5deg); box-shadow:0 5px 0 #e1a93d; }
+    .stats { display:flex; gap:10px; }
+    .pill { min-width:92px; height:48px; border:3px solid white; border-radius:25px; background:rgba(255,255,255,.88); box-shadow:0 5px 0 rgba(51,128,128,.18); display:flex; align-items:center; justify-content:center; gap:8px; font-weight:900; }
+    .progress-wrap { position:absolute; z-index:20; top:82px; left:50%; transform:translateX(-50%); width:min(420px,42vw); height:16px; background:rgba(36,91,112,.28); border:3px solid rgba(255,255,255,.85); border-radius:20px; }
+    #progress { height:100%; width:0%; background:var(--yellow); border-radius:20px; transition:.35s width; }
+    #goalCard { position:absolute; z-index:25; left:50%; top:116px; transform:translateX(-50%); width:min(500px,52vw); text-align:center; border:4px solid white; border-radius:24px; background:rgba(255,250,240,.96); box-shadow:0 10px 0 rgba(49,125,128,.16); padding:12px 20px; }
+    #prompt { font-size:19px; font-weight:900; }.letter { color:#ed6a5a; font-size:38px; vertical-align:-4px; margin-left:6px; }
+    #road { position:absolute; z-index:4; left:-5%; bottom:0; width:110%; height:38%; background:#e9bc79; clip-path:polygon(0 40%,100% 20%,100% 100%,0 100%); border-top:8px solid #d9a861; }
+    #road:after { content:""; position:absolute; inset:35% 0 0; background:repeating-linear-gradient(90deg,transparent 0 70px,#f7dda2 70px 92px); opacity:.8; }
+    .path-letter { position:absolute; z-index:8; bottom:26%; width:72px; height:72px; border-radius:50%; display:grid; place-items:center; background:white; border:5px solid #70c0dd; color:var(--ink); font-size:38px; font-weight:1000; box-shadow:0 7px 0 #57a4c1,0 12px 18px rgba(38,89,96,.18); transition:.3s transform,.3s opacity,.3s bottom,.3s left; }
+    .path-letter.done { background:#bff0ce; border-color:#55b981; opacity:.55; transform:scale(.75); }
+    #player { position:absolute; z-index:15; left:12%; bottom:21%; width:88px; height:125px; transition:left .42s cubic-bezier(.2,.8,.3,1),bottom .32s; filter:drop-shadow(0 8px 4px rgba(48,99,93,.22)); }
+    #player.jump { bottom:34%; }.fox .ear { position:absolute; width:32px; height:42px; top:0; background:#ef8058; clip-path:polygon(50% 0,100% 100%,0 100%); }.fox .ear.l { left:10px; transform:rotate(-10deg); }.fox .ear.r { right:10px; transform:rotate(10deg); }
+    .fox .head { position:absolute; left:12px; top:18px; width:64px; height:58px; border-radius:48% 48% 55% 55%; background:#f68a61; }.fox .head:after { content:""; position:absolute; left:14px; bottom:-1px; width:36px; height:24px; border-radius:50%; background:#fff5df; }.fox .eye { position:absolute; z-index:2; top:38px; width:7px; height:9px; border-radius:50%; background:#18304a; }.fox .eye.l { left:34px; }.fox .eye.r { left:48px; }.fox .nose { position:absolute; z-index:3; left:40px; top:59px; width:8px; height:7px; border-radius:50%; background:#18304a; }
+    .fox .body { position:absolute; left:25px; bottom:0; width:40px; height:58px; border-radius:20px 20px 12px 12px; background:#f68a61; }.fox .tail { position:absolute; right:-15px; bottom:8px; width:55px; height:25px; border-radius:100% 15% 100% 40%; background:#f68a61; transform:rotate(-20deg); border-right:11px solid #fff5df; }.fox .leg { position:absolute; z-index:-1; bottom:-8px; width:14px; height:28px; border-radius:10px; background:#d86648; }.fox .leg.l { left:24px; }.fox .leg.r { right:23px; }
+    #choices { position:absolute; z-index:30; left:50%; bottom:26px; transform:translateX(-50%); display:flex; gap:14px; }
+    .choice { width:82px; height:82px; border:5px solid white; border-radius:22px; background:#fffdf5; box-shadow:0 8px 0 #d6a75e,0 12px 20px rgba(49,99,89,.18); color:var(--ink); font-size:44px; font-weight:1000; cursor:pointer; transition:.12s transform,.12s box-shadow; }
+    .choice:hover { transform:translateY(-5px) rotate(-2deg); }.choice:active { transform:translateY(4px); box-shadow:0 4px 0 #d6a75e; }.choice.correct { animation:bop .45s 2;background:#bff0ce; }.choice.wrong { animation:shake .35s;background:#ffd1cc; }
+    @keyframes bop {50%{transform:translateY(-16px) scale(1.12)}} @keyframes shake {25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+    #burst { position:absolute; z-index:40; left:50%; top:50%; transform:translate(-50%,-50%) scale(0); text-align:center; pointer-events:none; }.burst-word { font-size:54px; font-weight:1000; color:white; text-shadow:0 5px 0 #e7a83b,0 8px 20px #4a8d91; }.burst-star { font-size:68px; }
+    #burst.show { animation:burst 1s forwards;} @keyframes burst {30%{transform:translate(-50%,-50%) scale(1)}70%{transform:translate(-50%,-50%) scale(1)}100%{transform:translate(-50%,-50%) scale(.2);opacity:0}}
+    #complete { display:none; position:absolute; z-index:50; inset:0; place-items:center; background:rgba(52,123,126,.55); backdrop-filter:blur(5px); }.modal { width:min(520px,86vw); text-align:center; border:7px solid white; border-radius:32px; background:#fffaf0; padding:32px; box-shadow:0 15px 0 rgba(38,91,92,.25); }.modal h1 { margin:8px 0; font-size:44px; }.modal p { font-size:20px; }.again { border:0; border-radius:18px; background:#ff7163; color:white; padding:15px 28px; font-size:22px; font-weight:900; box-shadow:0 7px 0 #cf5549; cursor:pointer; }
+    @media(max-width:700px){ .brand span{display:none}.topbar{top:10px}.stats{gap:5px}.pill{min-width:65px;height:42px}.progress-wrap{top:66px}.topbar{left:12px;right:12px}#goalCard{top:92px;width:88vw}.letter{font-size:30px}.choice{width:66px;height:66px;font-size:36px}.path-letter{width:54px;height:54px;font-size:29px}#choices{bottom:16px}.brand{font-size:16px}.logo{width:42px;height:42px}.hill{height:16%} }
+  </style>
+</head>
+<body>
+<div id="game">
+  <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div><div class="hill a"></div><div class="hill b"></div>
+  <div class="topbar"><div class="brand"><div class="logo">Aa</div><span>Alphabet Adventure</span></div><div class="stats"><div class="pill">⭐ <span id="stars">0</span></div><div class="pill">🏁 <span id="count">0/10</span></div></div></div>
+  <div class="progress-wrap"><div id="progress"></div></div>
+  <div id="goalCard"><span id="prompt">Find the letter</span><span class="letter" id="target">A</span></div>
+  <div id="road"></div>
+  <div id="player"><div class="fox"><div class="tail"></div><div class="ear l"></div><div class="ear r"></div><div class="head"></div><div class="eye l"></div><div class="eye r"></div><div class="nose"></div><div class="body"></div><div class="leg l"></div><div class="leg r"></div></div></div>
+  <div id="letters"></div><div id="choices"></div>
+  <div id="burst"><div class="burst-star">⭐</div><div class="burst-word">Great job!</div></div>
+  <div id="complete"><div class="modal"><div style="font-size:64px">🏆</div><h1>Adventure Complete!</h1><p>You found all 10 letters!</p><button class="again" id="again">Play Again</button></div></div>
+</div>
+<script>
+const alphabet='ABCDEFGHIJ'; let index=0, stars=0, busy=false;
+const lettersEl=document.getElementById('letters'), choicesEl=document.getElementById('choices'), player=document.getElementById('player');
+function buildPath(){lettersEl.innerHTML=''; for(let i=0;i<10;i++){const el=document.createElement('div');el.className='path-letter'+(i<index?' done':'');el.textContent=alphabet[i];el.style.left=(18+i*7.2)+'%';el.style.bottom=(26+(i%3)*2)+'%';lettersEl.appendChild(el)}}
+function speak(text){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=.82;speechSynthesis.speak(u)}catch(e){}}
+function setRound(){if(index>=10){finish();return}document.getElementById('target').textContent=alphabet[index];choicesEl.innerHTML='';const target=alphabet[index];let pool=[target];while(pool.length<3){const c=alphabet[Math.floor(Math.random()*10)];if(!pool.includes(c))pool.push(c)}pool.sort(()=>Math.random()-.5);pool.forEach(c=>{const b=document.createElement('button');b.className='choice';b.textContent=c;b.setAttribute('aria-label','Choose '+c);b.onclick=()=>choose(b,c);choicesEl.appendChild(b)});document.getElementById('progress').style.width=(index*10)+'%';document.getElementById('count').textContent=index+'/10';buildPath();}
+function choose(btn,c){if(busy)return;if(c===alphabet[index]){busy=true;btn.classList.add('correct');speak(c+', great job!');stars++;document.getElementById('stars').textContent=stars;player.classList.add('jump');document.getElementById('burst').classList.remove('show');void document.getElementById('burst').offsetWidth;document.getElementById('burst').classList.add('show');setTimeout(()=>{player.style.left=(18+index*7.2)+'%';player.classList.remove('jump');index++;document.getElementById('progress').style.width=(index*10)+'%';document.getElementById('count').textContent=index+'/10';busy=false;setRound()},850)}else{btn.classList.remove('wrong');void btn.offsetWidth;btn.classList.add('wrong');speak('Try again')} }
+function finish(){document.getElementById('complete').style.display='grid';speak('Wonderful! Alphabet adventure complete!')}
+document.getElementById('again').onclick=()=>{index=0;stars=0;document.getElementById('stars').textContent='0';player.style.left='12%';document.getElementById('complete').style.display='none';setRound()};
+setRound();
+</script>
+</body>
+</html>
