@@ -1,0 +1,1 @@
+{"scripts":{"start":"npx --yes serve -l 3002 ."},"dependencies":{"serve":"^14.2.4"}}
