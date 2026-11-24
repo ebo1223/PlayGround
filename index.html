@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Samurai Duel</title>
+  <style>
+    :root { --ink:#14120f; --paper:#d8cfae; --red:#a8392e; --gold:#d3ad67; }
+    * { box-sizing:border-box; }
+    html,body { width:100%; height:100%; margin:0; overflow:hidden; background:#090908; }
+    body { font-family:Georgia,"Times New Roman",serif; }
+    canvas { display:block; width:100%; height:100%; }
+    .hud { position:fixed; inset:0; pointer-events:none; color:#f4ecd2; text-shadow:0 2px 3px #000; }
+    .top { position:absolute; top:18px; left:50%; transform:translateX(-50%); width:min(820px,74vw); display:flex; align-items:flex-start; justify-content:space-between; }
+    .fighter { width:43%; }
+    .name { font-size:13px; letter-spacing:4px; text-transform:uppercase; margin-bottom:7px; }
+    .bar { height:10px; border:1px solid rgba(244,236,210,.65); background:rgba(20,18,15,.65); padding:2px; box-shadow:0 2px 8px #0009; }
+    .fill { height:100%; background:linear-gradient(90deg,#b94d3b,#e0bb75); transition:width .12s; }
+    .fighter.right { text-align:right; }
+    .fighter.right .fill { margin-left:auto; }
+    .round { position:absolute; top:14px; left:50%; transform:translateX(-50%); text-align:center; }
+    .round small { display:block; font-size:10px; letter-spacing:3px; color:#d7c9a5; }
+    .round strong { display:block; margin-top:2px; font-size:22px; color:#fff4d4; }
+    .center { position:absolute; left:50%; top:44%; transform:translate(-50%,-50%); text-align:center; }
+    .title { font-size:clamp(54px,9vw,118px); letter-spacing:.08em; line-height:.82; white-space:nowrap; color:#ede3c7; opacity:.96; text-shadow:0 5px 0 #241a12,0 12px 28px #000; }
+    .title em { display:block; color:#bd4d3d; font-style:normal; font-size:.48em; letter-spacing:.35em; margin-top:.35em; }
+    .subtitle { margin-top:26px; font-size:13px; letter-spacing:5px; text-transform:uppercase; }
+    .start { margin-top:24px; pointer-events:auto; cursor:pointer; border:1px solid #d7c9a5; background:#17140fdd; color:#eee4c7; padding:12px 24px; font-family:inherit; letter-spacing:3px; text-transform:uppercase; box-shadow:0 8px 20px #0008; }
+    .start:hover { background:#a8392e; }
+    .controls { position:absolute; bottom:15px; left:50%; transform:translateX(-50%); display:flex; gap:22px; font-size:10px; letter-spacing:2px; color:#d4c99f; opacity:.8; }
+    .controls b { color:#fff3d2; }
+    .stamina { position:absolute; bottom:44px; left:50%; transform:translateX(-50%); width:180px; height:4px; background:#0008; }
+    .stamina i { display:block; height:100%; width:100%; background:#d6be78; transition:width .1s; }
+    @media (max-width:700px) { .top{top:10px;width:90vw}.round{top:54px}.name{font-size:9px}.controls{display:none}.subtitle{font-size:9px}.title{font-size:52px}.stamina{bottom:18px} }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div class="hud">
+    <div class="top">
+      <div class="fighter"><div class="name">Akira</div><div class="bar"><div id="hp1" class="fill"></div></div></div>
+      <div class="round"><small>ROUND</small><strong id="round">I</strong></div>
+      <div class="fighter right"><div class="name">Ryuji</div><div class="bar"><div id="hp2" class="fill"></div></div></div>
+    </div>
+    <div id="center" class="center">
+      <div class="title">SAMURAI<em>DUEL</em></div>
+      <div id="subtitle" class="subtitle">Defend the honor of your clan</div>
+      <button id="start" class="start">Draw Blade</button>
+    </div>
+    <div class="stamina"><i id="stamina"></i></div>
+    <div class="controls"><span><b>A / D</b> MOVE</span><span><b>W</b> JUMP</span><span><b>S</b> BLOCK</span><span><b>J</b> SLASH</span><span><b>K</b> HEAVY</span></div>
+  </div>
+<script>
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+let W,H,ground,last=0,time=0,state='menu',shake=0,flash=0;
+const keys={}, particles=[];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function resize(){W=canvas.width=innerWidth;H=canvas.height=innerHeight;ground=H*.78}
+addEventListener('resize',resize);resize();
+const player={x:W*.28,y:ground,w:42,h:120,hp:100,stamina:100,facing:1,vy:0,attack:0,heavy:0,block:false,hit:0,dead:false,cool:0};
+const enemy={x:W*.72,y:ground,w:42,h:120,hp:100,stamina:100,facing:-1,vy:0,attack:0,heavy:0,block:false,hit:0,dead:false,cool:0,think:0};
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLower==' '&&state!='playing')start()});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+function reset(){player.x=W*.28;enemy.x=W*.72;player.y=enemy.y=ground;player.hp=enemy.hp=100;player.stamina=enemy.stamina=100;player.dead=enemy.dead=false;player.attack=enemy.attack=0;player.hit=enemy.hit=0;particles.length=0}
+function start(){reset();state='playing';document.getElementById('center').style.display='none'}
+document.getElementById('start').onclick=start;
+function startAttack(a,heavy){if(a.cool<=0&&a.stamina>= (heavy?30:14)){a.attack=heavy?.38:.24;a.heavy=heavy?a.attack:0;a.cool=heavy?.7:.32;a.stamina-=heavy?30:14;}}
+function damage(att,def,heavy){const d=heavy?24:12;if(def.block){def.hit=.18;def.stamina=Math.max(0,def.stamina-(heavy?28:10));spark(att.x+(att.facing>0?70:-70),ground-92,'#e6c56f',6)}else{def.hp-=d;def.hit=.3;shake=heavy?12:7;flash=.12;spark(def.x,ground-88,heavy?'#e33d2d':'#d8cfae',heavy?16:10)}}
+function spark(x,y,c,n){for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-.5)*500,vy:(Math.random()-1)*280,life:.25+Math.random()*(.5),c})}
+function update(dt){time+=dt;if(state!='playing')return;
+  const speed=190;
+  player.block=keys['s']&&player.stamina>0&&player.attack<=0;
+  if(keys['a']){player.x-=speed*dt;player.facing=-1}
+  if(keys['d']){player.x+=speed*dt;player.facing=1}
+  if(keys['w']&&player.y>=ground-.1){player.vy=-480}
+  if(keys['j'])startAttack(player,false);if(keys['k'])startAttack(player,true);
+  // enemy AI
+  enemy.think-=dt; const dist=enemy.x-player.x;
+  if(Math.abs(dist)<150){if(enemy.think<=0){const r=Math.random();if(r<.32)enemy.block=true;else if(r<.75)startAttack(enemy,r>.62);enemy.think=.25+Math.random()*.45}}else enemy.block=false;
+  if(Math.abs(dist)>115&&!enemy.block){enemy.x+=(dist>0?-1:1)*90*dt;enemy.facing=dist>0?-1:1}
+  if(Math.abs(dist)<150&&enemy.cool<=0&&Math.random()<.012)startAttack(enemy,false);
+  for(const a of [player,enemy]){a.cool-=dt;a.attack-=dt;a.hit-=dt;a.vy+=1100*dt;a.y+=a.vy*dt;if(a.y>ground){a.y=ground;a.vy=0}a.stamina=Math.min(100,a.stamina+(a.block?5:16)*dt);a.x=clamp(a.x,70,W-70)}
+  const sep=player.x-enemy.x;if(Math.abs(sep)<78){if(sep>0)player.x+=80-Math.abs(sep);else enemy.x+=80-Math.abs(sep)}
+  for(const [a,b] of [[player,enemy],[enemy,player]]){if(a.attack>0&&a.attack>.16){const inRange=Math.abs(a.x-b.x)<112&&b.y>ground-130;if(inRange&&a.heavy===a.attack+.01){} // collision handled below }
+  }
+  // use attack phase crossing to register once
+  for(const [a,b] of [[player,enemy],[enemy,player]]){if(a.attack>.18&&a.attack<.31){a._checked||(a._checked=true);if(Math.abs(a.x-b.x)<115){damage(a,b,a.attack<.26)}}else if(a.attack<=0)a._checked=false;
+  }
+  for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=500*dt;if(p.life<=0)particles.splice(i,1)}
+  shake*=.88;if(shake<.2)shake=0;flash=Math.max(0,flash-dt);
+  if(player.hp<=0||enemy.hp<=0){player.dead=player.hp<=0;enemy.dead=enemy.hp<=0;state='over';setTimeout(showEnd,550)}
+  document.getElementById('hp1').style.width=player.hp+'%';document.getElementById('hp2').style.width=enemy.hp+'%';document.getElementById('stamina').style.width=player.stamina+'%';
+}
+let endShown=false;
+function showEnd(){if(endShown)return;endShown=true;const c=document.getElementById('center');c.style.display='block';document.getElementById('subtitle').textContent=player.hp>enemy.hp?'The red dawn belongs to Akira':'Ryuji claims the field';document.querySelector('.title').innerHTML=player.hp>enemy.hp?'VICTOR':'DEFEAT';document.querySelector('.title em').style.display='none';const b=document.getElementById('start');b.textContent='Duel Again'}
+document.getElementById('start').addEventListener('click',()=>{endShown=false;document.querySelector('.title').innerHTML='SAMURAI<em>DUEL</em>';document.querySelector('.title em').style.display='block';document.getElementById('subtitle').textContent='Defend the honor of your clan'});
+function poly(points,fill){ctx.fillStyle=fill;ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();ctx.fill()}
+function drawBackground(){
+  const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#d1bda0');sky.addColorStop(.55,'#a58e71');sky.addColorStop(.56,'#4b3c32');sky.addColorStop(1,'#171512');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+  // sun
+  ctx.globalAlpha=.75;ctx.fillStyle='#b8563d';ctx.beginPath();ctx.arc(W*.5,H*.31,Math.min(W,H)*.09,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+  // distant mountains
+  poly([[0,H*.58],[W*.09,H*.39],[W*.18,H*.55],[W*.29,H*.35],[W*.43,H*.58],[W*.56,H*.42],[W*.68,H*.57],[W*.82,H*.33],[W,W*.52],[W,H],[0,H]],'#51483e');
+  poly([[0,H*.64],[W*.12,H*.46],[W*.23,H*.63],[W*.38,H*.48],[W*.51,H*.64],[W*.67,H*.45],[W*.79,H*.61],[W*.92,H*.44],[W,H*.62],[W,H],[0,H]],'#302f29');
+  // pagoda silhouettes
+  ctx.fillStyle='#191918';ctx.fillRect(W*.12,H*.56,W*.035,H*.18);poly([[W*.09,H*.57],[W*.145,H*.52],[W*.19,H*.57]],'#191918');ctx.fillRect(W*.87,H*.59,W*.028,H*.15);poly([[W*.84,H*.60],[W*.905,H*.55],[W*.94,H*.60]],'#191918');
+  // ground
+  ctx.fillStyle='#151512';ctx.fillRect(0,ground,W,H-ground);ctx.fillStyle='#27231d';ctx.fillRect(0,ground,W,3);
+  ctx.globalAlpha=.28;for(let i=0;i<35;i++){ctx.fillStyle=i%2?'#8c7c61':'#0e0e0c';ctx.fillRect((i*197%W),ground+20+(i*43%(H-ground-20)),1+i%3,1)}ctx.globalAlpha=1;
+  // reeds
+  ctx.strokeStyle='#0e100d';ctx.lineWidth=2;for(let i=0;i<48;i++){const x=(i*83)%W;ctx.beginPath();ctx.moveTo(x,ground);ctx.quadraticCurveTo(x+(i%5-2)*8,ground-25,x+(i%7-3)*5,ground-45-Math.sin(i)*12);ctx.stroke()}
+}
+function drawSamurai(a,enemySide){
+  ctx.save();ctx.translate(a.x+(shake?(Math.random()-0.5)*shake:0),a.y);ctx.scale(a.facing,1);
+  if(a.hit>0)ctx.rotate((Math.random()-0.5)*.12);
+  // shadow
+  ctx.save();ctx.scale(a.facing,1);ctx.fillStyle='#08080788';ctx.beginPath();ctx.ellipse(0,4,55,9,0,0,Math.PI*2);ctx.fill();ctx.restore();
+  // legs
+  ctx.fillStyle='#171713';ctx.beginPath();ctx.moveTo(-20,-66);ctx.lineTo(-7,-66);ctx.lineTo(-12,-8);ctx.lineTo(-34,-8);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(5,-66);ctx.lineTo(22,-66);ctx.lineTo(31,-8);ctx.lineTo(9,-8);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#4f4b40';ctx.fillRect(-38,-12,30,8);ctx.fillRect(7,-12,29,8);
+  // body
+  ctx.fillStyle=enemySide?'#6f2722':'#24201b';ctx.beginPath();ctx.moveTo(-27,-112);ctx.lineTo(24,-112);ctx.lineTo(34,-64);ctx.lineTo(-32,-64);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#a09a78';ctx.fillRect(-28,-72,59,8);
+  ctx.fillStyle='#161713';ctx.fillRect(-4,-111,9,42);
+  // arm
+  ctx.fillStyle=enemySide?'#6f2722':'#24201b';ctx.save();ctx.translate(20,-102);ctx.rotate(a.attack>0?.75:-.08);ctx.fillRect(0,0,15,48);ctx.restore();
+  // head/helmet
+  ctx.fillStyle='#bbb090';ctx.beginPath();ctx.arc(0,-126,18,0,Math.PI*2);ctx.fill();ctx.fillStyle='#171713';ctx.beginPath();ctx.moveTo(-24,-128);ctx.quadraticCurveTo(-10,-145,24,-132);ctx.lineTo(19,-124);ctx.lineTo(-22,-124);ctx.fill();ctx.fillStyle='#c4bda3';ctx.fillRect(-19,-153,38,8);ctx.fillStyle='#171713';ctx.fillRect(-3,-153,6,40);
+  // sword
+  ctx.save();ctx.translate(30,-63);let ang=a.attack>0?-.8+a.attack*3:-.55;if(a.block)ang=-2;if(a.hit>0)ang+=.3;ctx.rotate(ang);ctx.fillStyle='#6b5c3e';ctx.fillRect(-4,-9,14,18);ctx.fillStyle='#d9d4b9';ctx.beginPath();ctx.moveTo(5,-4);ctx.lineTo(112,-1);ctx.lineTo(122,2);ctx.lineTo(5,5);ctx.closePath();ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(8,-2,102,1);ctx.restore();
+  ctx.restore();
+}
+function draw(){ctx.save();if(shake)ctx.translate((Math.random()-0.5)*shake,(Math.random()-0.5)*shake);drawBackground();ctx.restore();
+  drawSamurai(player,false);drawSamurai(enemy,true);
+  for(const p of particles){ctx.globalAlpha=clamp(p.life*2,0,1);ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,2+Math.random()*2,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1;
+  if(flash){ctx.fillStyle=`rgba(210,190,145,${flash*5})`;ctx.fillRect(0,0,W,H)}
+}
+function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationAnimationFrame(loop)}
+function tick(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(tick)}requestAnimationFrame(tick);
+</script>
+</body>
+</html>
