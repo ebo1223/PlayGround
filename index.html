@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Whack-a-Mole</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark"><span></span></div>
+        <div>
+          <p>Backyard Arcade</p>
+          <h1>WHACK-A-MOLE</h1>
+        </div>
+      </div>
+      <button id="soundBtn" class="icon-btn" aria-label="Toggle sound" title="Toggle sound">
+        <svg class="sound-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6.7 8.5H3.5v7h3.2L11 19V5Zm4.2 3.2a5.3 5.3 0 0 1 0 7.6M18 5.5a8.8 8.8 0 0 1 0 13"/></svg>
+      </button>
+    </header>
+
+    <section class="scoreboard" aria-label="Game stats">
+      <div class="stat">
+        <span>SCORE</span>
+        <strong id="score">000</strong>
+      </div>
+      <div class="stat timer-stat">
+        <span>TIME</span>
+        <strong id="timer">30</strong>
+        <small>SEC</small>
+      </div>
+      <div class="stat">
+        <span>BEST</span>
+        <strong id="best">000</strong>
+      </div>
+    </section>
+
+    <section class="yard" aria-label="Whack-a-Mole game board">
+      <div class="cloud cloud-one"></div>
+      <div class="cloud cloud-two"></div>
+      <div class="fence"></div>
+      <div class="board" id="board"></div>
+
+      <div id="startOverlay" class="overlay">
+        <div class="start-card">
+          <div class="mini-mole">•ᴗ•</div>
+          <p class="eyebrow">30 SECOND CHALLENGE</p>
+          <h2>Ready to rumble?</h2>
+          <p>Whack the moles before they duck away!</p>
+          <button id="startBtn" class="start-btn"><span>START GAME</span><b>▶</b></button>
+        </div>
+      </div>
+
+      <div id="endOverlay" class="overlay hidden">
+        <div class="start-card end-card">
+          <p class="eyebrow">TIME'S UP!</p>
+          <h2 id="endTitle">Nice whacking!</h2>
+          <div class="final-score"><span>FINAL SCORE</span><strong id="finalScore">0</strong></div>
+          <button id="againBtn" class="start-btn"><span>PLAY AGAIN</span><b>↻</b></button>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="combo"><span id="comboLabel">COMBO</span><div id="comboDots" class="dots"><i></i><i></i><i></i><i></i><i></i></div></div>
+      <p><span class="mouse-icon">◎</span> CLICK / TAP TO WHACK</p>
+    </footer>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
