@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Snake Classic</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="arcade">
+    <header class="topbar">
+      <div class="brand">
+        <div class="snake-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <h1>SNAKE <span>CLASSIC</span></h1>
+      </div>
+      <button id="soundBtn" class="icon-btn" aria-label="Toggle sound" title="Toggle sound">
+        <svg viewBox="0 0 24 24"><path d="M11 5 6.5 8.5H3v7h3.5L11 19V5Zm4.5 3.2a5.5 5.5 0 0 1 0 7.6M18 5.5a9 9 0 0 1 0 13"/></svg>
+      </button>
+    </header>
+
+    <section class="game-shell">
+      <aside class="stats left-stats">
+        <div class="stat"><span>SCORE</span><strong id="score">0000</strong></div>
+        <div class="stat"><span>BEST</span><strong id="best">0000</strong></div>
+      </aside>
+
+      <div class="board-wrap">
+        <canvas id="game" width="600" height="600" aria-label="Snake game board"></canvas>
+        <div id="overlay" class="overlay">
+          <div class="overlay-card">
+            <p id="overlayEyebrow">CLASSIC ARCADE</p>
+            <h2 id="overlayTitle">READY?</h2>
+            <button id="startBtn" class="play-btn"><span id="startLabel">PLAY</span><kbd>SPACE</kbd></button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="stats right-stats">
+        <div class="stat"><span>SPEED</span><strong id="speed">1</strong></div>
+        <div class="stat"><span>LEVEL</span><strong id="level">01</strong></div>
+      </aside>
+    </section>
+
+    <nav class="controls" aria-label="Game controls">
+      <button id="pauseBtn" class="control-btn"><span class="pause-icon">Ⅱ</span> PAUSE</button>
+      <button id="restartBtn" class="control-btn"><span class="restart-icon">↻</span> RESTART</button>
+    </nav>
+
+    <div class="mobile-pad" aria-label="Touch direction controls">
+      <button data-dir="up" class="pad-up" aria-label="Move up">▲</button>
+      <button data-dir="left" class="pad-left" aria-label="Move left">◀</button>
+      <button data-dir="down" class="pad-down" aria-label="Move down">▼</button>
+      <button data-dir="right" class="pad-right" aria-label="Move right">▶</button>
+    </div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
