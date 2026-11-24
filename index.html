@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pac-Man Maze</title>
+  <style>
+    :root { --yellow:#ffe500; --blue:#265cff; --ink:#050507; }
+    * { box-sizing:border-box; }
+    html,body { margin:0; width:100%; height:100%; overflow:hidden; background:#050507; }
+    body { font-family:"Trebuchet MS",Arial,sans-serif; color:#fff; }
+    .app { width:100%; height:100%; display:grid; grid-template-columns:1fr 240px; }
+    .stage { position:relative; display:grid; place-items:center; min-width:0; background:radial-gradient(circle at 50% 45%,#16161d 0,#08080c 58%,#020203 100%); }
+    canvas { display:block; width:min(calc(100vh - 36px), calc(100vw - 276px)); height:min(calc(100vh - 36px), calc(100vw - 276px)); image-rendering:auto; }
+    .sidebar { border-left:1px solid #24242c; background:linear-gradient(145deg,#111118,#09090d); padding:22px 18px; display:flex; flex-direction:column; }
+    .brand { font-weight:900; font-size:22px; letter-spacing:-1px; color:var(--yellow); line-height:.9; text-transform:uppercase; text-shadow:2px 2px #b52828; }
+    .brand span { display:block; color:#fff; font-size:13px; letter-spacing:5px; margin-top:8px; text-shadow:none; }
+    .scorebox { margin-top:28px; }
+    .label { color:#777781; font-size:11px; font-weight:800; letter-spacing:2px; }
+    .score { font-size:46px; font-weight:900; line-height:1; margin:5px 0 18px; font-variant-numeric:tabular-nums; }
+    .lives { display:flex; gap:8px; height:24px; }
+    .life { width:22px; height:22px; background:var(--yellow); border-radius:50%; clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 55%,48% 50%,0 45%); }
+    .controls { margin-top:auto; padding-top:18px; border-top:1px solid #25252d; }
+    .keys { display:grid; grid-template-columns:repeat(3,34px); grid-template-rows:repeat(2,34px); gap:5px; margin-top:10px; }
+    .key { display:grid; place-items:center; border:1px solid #3a3a44; border-radius:7px; color:#aaaab4; font-size:14px; background:#191920; box-shadow:0 3px 0 #08080a; }
+    .key.up { grid-column:2; } .key.left {grid-column:1}.key.down{grid-column:2}.key.right{grid-column:3}
+    .hint { color:#777781; font-size:11px; margin-top:12px; line-height:1.5; }
+    .overlay { position:absolute; inset:0; display:grid; place-items:center; background:rgba(2,2,4,.18); opacity:0; pointer-events:none; transition:.2s; }
+    .overlay.show { opacity:1; pointer-events:auto; }
+    .panel { text-align:center; background:rgba(5,5,8,.92); border:2px solid var(--yellow); border-radius:14px; padding:22px 34px; box-shadow:0 14px 60px #000; }
+    .panel h1 { margin:0 0 8px; color:var(--yellow); font-size:34px; }
+    .panel button { border:0; background:var(--yellow); color:#111; border-radius:20px; padding:10px 18px; font-weight:900; cursor:pointer; }
+    @media (max-width:700px) { .app{grid-template-columns:1fr 82px}.sidebar{padding:14px 9px}.brand{font-size:15px}.brand span{font-size:8px;letter-spacing:2px}.score{font-size:25px}.controls{display:none}.lives{gap:3px}.life{width:17px;height:17px}.scorebox{margin-top:18px} canvas{width:min(calc(100vh - 20px),calc(100vw - 96px));height:min(calc(100vh - 20px),calc(100vw - 96px))} }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="stage">
+      <canvas id="game" width="672" height="744"></canvas>
+      <div class="overlay show" id="overlay"><div class="panel"><h1 id="panelTitle">READY!</h1><button id="startBtn">START GAME</button></div></div>
+    </section>
+    <aside class="sidebar">
+      <div class="brand">PAC-MAN<span>MAZE RUN</span></div>
+      <div class="scorebox"><div class="label">SCORE</div><div class="score" id="score">00000</div><div class="label">LIVES</div><div class="lives" id="lives"></div></div>
+      <div class="controls"><div class="label">CONTROLS</div><div class="keys"><div class="key up">▲</div><div class="key left">◀</div><div class="key down">▼</div><div class="key right">▶</div></div><div class="hint">ARROW KEYS or WASD<br>Power dots turn the tables.</div></div>
+    </aside>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
