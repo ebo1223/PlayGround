@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Dragon Warrior</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main id="gameShell">
+    <canvas id="game" width="960" height="540" aria-label="Dragon Warrior game"></canvas>
+
+    <section id="titlePanel" class="overlay show">
+      <div class="sun"></div>
+      <div class="titleMark"><span>DRAGON</span><strong>WARRIOR</strong></div>
+      <p class="subtitle">THE ASHEN REALM</p>
+      <button id="startBtn" class="goldButton"><span>BEGIN JOURNEY</span><b>▶</b></button>
+      <div class="keys"><span>MOVE <b>WASD</b></span><i></i><span>ATTACK <b>J</b></span><i></i><span>DASH <b>K</b></span></div>
+    </section>
+
+    <section id="pausePanel" class="overlay panel">
+      <div class="dialog small">
+        <h2>JOURNEY PAUSED</h2>
+        <button id="resumeBtn" class="goldButton"><span>RESUME</span><b>▶</b></button>
+        <button id="restartBtn" class="darkButton">NEW JOURNEY</button>
+      </div>
+    </section>
+
+    <div id="touch" aria-label="Touch controls">
+      <div id="dpad"><button data-dir="up">▲</button><button data-dir="left">◀</button><button data-dir="down">▼</button><button data-dir="right">▶</button></div>
+      <div id="actions"><button id="dashTouch">DASH</button><button id="attackTouch">⚔</button></div>
+    </div>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
