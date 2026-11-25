@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tournament Champion</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand"><span class="mark">TC</span><div><small>KINGS CUP</small><strong>Tournament Champion</strong></div></div>
+      <button id="soundBtn" class="icon-btn" aria-label="Toggle sound">♪</button>
+    </header>
+
+    <section id="setup" class="screen active">
+      <div class="setup-copy">
+        <p class="eyebrow">8 FIGHTERS · SINGLE ELIMINATION</p>
+        <h1>CLAIM THE<br><em>CROWN</em></h1>
+        <p>Choose your champion. Fight through the bracket and leave the arena undefeated.</p>
+        <div class="fighters" id="fighters"></div>
+        <button id="startBtn" class="primary">ENTER TOURNAMENT <span>→</span></button>
+      </div>
+      <aside class="hero-card">
+        <div class="ring"><div class="fighter-silhouette" id="heroSilhouette"></div></div>
+        <div class="selected-tag"><span>YOUR CHAMPION</span><strong id="selectedName">Atlas</strong></div>
+      </aside>
+    </section>
+
+    <section id="bracket" class="screen">
+      <div class="topline"><div><p class="eyebrow">LIVE BRACKET</p><h2 id="roundTitle">Quarter Finals</h2></div><div class="rounds" id="roundDots"></div></div>
+      <div class="bracket-grid" id="bracketGrid"></div>
+    </section>
+
+    <section id="fight" class="screen">
+      <div class="fight-head"><div class="fighter-name"><span id="pSide">BLUE</span><strong id="pName">Atlas</strong></div><div class="round-label"><span id="fightRound">ROUND 1</span><b id="timer">30</b></div><div class="fighter-name right"><span id="eSide">RED</span><strong id="eName">Viper</strong></div></div>
+      <div class="health-row"><div class="health"><i id="pHealth"></i></div><div class="health right-health"><i id="eHealth"></i></div></div>
+      <div class="arena" id="arena">
+        <div class="crowd"></div><div class="spot spot-a"></div><div class="spot spot-b"></div>
+        <div class="combatant player" id="player"><div class="glove glove-l"></div><div class="glove glove-r"></div><div class="body"><i></i></div><div class="legs"></div></div>
+        <div class="combatant enemy" id="enemy"><div class="glove glove-l"></div><div class="glove glove-r"></div><div class="body"><i></i></div><div class="legs"></div></div>
+        <div class="impact" id="impact">PERFECT!</div>
+      </div>
+      <div class="controls">
+        <button class="move" data-move="jab"><kbd>1</kbd><span><strong>JAB</strong><small>Quick · 8 dmg</small></span></button>
+        <button class="move" data-move="cross"><kbd>2</kbd><span><strong>CROSS</strong><small>Power · 14 dmg</small></span></button>
+        <button class="move" data-move="block"><kbd>3</kbd><span><strong>BLOCK</strong><small>Guard · 60%</small></span></button>
+      </div>
+    </section>
+
+    <section id="result" class="screen">
+      <div class="trophy">♛</div>
+      <p class="eyebrow" id="resultEyebrow">KINGS CUP</p>
+      <h1 id="resultTitle">CHAMPION!</h1>
+      <p id="resultText">Undefeated in the ring.</p>
+      <div class="result-stats"><div><strong id="winsStat">3</strong><span>WINS</span></div><div><strong id="koStat">0</strong><span>KOs</span></div></div>
+      <button id="againBtn" class="primary">FIGHT AGAIN <span>↻</span></button>
+    </section>
+  </main>
+  <div id="toast" class="toast"></div>
+  <script src="game.js"></script>
+</body>
+</html>
