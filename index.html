@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Tournament Champion 3D</title><link rel="stylesheet" href="./style.css"/></head>
+<body>
+<div id="game"></div>
+<div id="vignette"></div>
+<header><div class="brand"><span>TC</span><b>Tournament<br/>Champion <i>3D</i></b></div><button id="sound" aria-label="Toggle sound">♪</button></header>
+<div id="hud">
+  <div class="fighter player"><div class="name"><b id="pName">NOVA</b><em>YOU</em></div><div class="bar"><div id="pBar"></div></div></div>
+  <div class="round"><small id="roundLabel">QUARTER-FINAL</small><strong id="timer">60</strong></div>
+  <div class="fighter enemy"><div class="name"><em id="difficulty">AI</em><b id="eName">TITAN</b></div><div class="bar"><div id="eBar"></div></div></div>
+</div>
+<div id="bracket"><h3>CHAMPIONSHIP BRACKET</h3><div id="pairs"></div></div>
+<div id="controls"><kbd>WASD</kbd><span>MOVE</span><kbd>J</kbd><span>JAB</span><kbd>K</kbd><span>HEAVY</span><kbd>SPACE</kbd><span>BLOCK</span></div>
+<div id="toast"><b>ROUND 1</b><span>FIGHT</span></div>
+<div id="overlay"><div class="panel"><small id="panelSmall">TOURNAMENT MODE</small><h1 id="panelTitle">BECOME THE<br/><i>CHAMPION</i></h1><p id="panelText">Win three fights. Own the arena.</p><button id="mainBtn">ENTER ARENA</button></div></div>
+<script type="module" src="./main.js"></script>
+</body></html>
