@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Street Fighter Arena</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app">
+  <canvas id="game" width="1280" height="720" aria-label="Street Fighter Arena game"></canvas>
+  <div id="hud" class="hidden">
+    <div class="fighter-ui left-ui"><div class="name">RYUJI</div><div class="meter"><div id="pHealth"></div></div><div class="gauge"><div id="pGauge"></div></div></div>
+    <div id="timer">99</div>
+    <div class="fighter-ui right-ui"><div class="name">KAIRO</div><div class="meter"><div id="eHealth"></div></div><div class="gauge"><div id="eGauge"></div></div></div>
+  </div>
+  <section id="menu" class="panel">
+    <div class="logo"><span>STREET</span><strong>FIGHTER</strong><em>ARENA</em></div>
+    <p>DUEL OF THE DISTRICT</p>
+    <button id="startBtn">ENTER THE ARENA</button>
+    <div class="controls"><b>MOVE</b> A D / ← → <i></i><b>JUMP</b> W / ↑ <i></i><b>PUNCH</b> J <i></i><b>KICK</b> K <i></i><b>BLOCK</b> S / ↓</div>
+  </section>
+  <div id="roundBanner"></div>
+  <div id="result" class="panel hidden"><h2 id="resultTitle">K.O.</h2><p id="resultText"></p><button id="againBtn">FIGHT AGAIN</button></div>
+</main>
+<script src="game.js"></script>
+</body>
+</html>
