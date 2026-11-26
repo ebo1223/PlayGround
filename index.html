@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Science Quiz</title>
+  <style>
+    :root { --ink:#17213b; --muted:#68718a; --blue:#5867ed; --blue2:#8791ff; --navy:#26365f; --cream:#f7f8fc; }
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,"Segoe UI",Arial,sans-serif;color:var(--ink);background:#eff1f7;min-height:100vh}
+    .app{min-height:100vh;display:grid;grid-template-columns:1fr 286px}
+    main{padding:26px 42px 32px;position:relative;background:radial-gradient(circle at 72% 18%,#fff 0,transparent 26%),linear-gradient(135deg,#fafbfe,#edf0f7)}
+    aside{background:linear-gradient(180deg,#303b64,#252f54);color:#fff;padding:26px 24px;display:flex;flex-direction:column}
+    .top{display:flex;justify-content:space-between;align-items:center;height:38px}.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:18px}.brandmark{width:38px;height:38px;border:2px solid #dfe3ff;border-radius:11px;display:grid;place-items:center;color:#5d67dc;background:#fff}.brandmark svg{width:21px}.top-actions{display:flex;gap:10px}.iconbtn{width:38px;height:38px;border:1px solid #dde1ec;border-radius:10px;background:#fff;display:grid;place-items:center;color:#65708c;cursor:pointer}.iconbtn svg{width:17px}
+    .progress-wrap{margin:29px 0 24px}.progress-meta{display:flex;justify-content:space-between;font-size:12px;color:#747e98;font-weight:700;margin-bottom:9px}.progress-track{height:7px;background:#dde2ed;border-radius:99px;overflow:hidden}.progress-bar{height:100%;width:10%;background:linear-gradient(90deg,#6675ed,#8791ff);border-radius:99px;transition:.35s}
+    .stage{max-width:820px;margin:0 auto}.category{display:inline-flex;align-items:center;gap:7px;border-radius:99px;padding:7px 11px;background:#e9edff;color:#5864d8;font-size:12px;font-weight:800}.category i{width:7px;height:7px;border-radius:50%;background:#6270e8}
+    h1.question{font-family:Georgia,"Times New Roman",serif;font-size:34px;line-height:1.2;margin:18px 0 22px;max-width:720px}
+    .answers{display:grid;grid-template-columns:1fr 1fr;gap:13px}.answer{min-height:88px;border:1px solid #dde2ec;border-radius:14px;background:rgba(255,255,255,.88);box-shadow:0 7px 18px rgba(44,53,91,.04);padding:15px 16px;display:flex;align-items:flex-start;gap:12px;text-align:left;color:var(--ink);font-size:16px;font-weight:700;cursor:pointer;transition:.18s}.answer:hover{transform:translateY(-2px);border-color:#aab2ed;box-shadow:0 10px 22px rgba(72,82,150,.10)}.letter{flex:0 0 34px;width:34px;height:34px;border-radius:9px;background:#f0f2f7;color:#69718a;display:grid;place-items:center;font-size:13px}.answer.correct{border:2px solid #56b99a;background:#f1fbf7}.answer.correct .letter{background:#56b99a;color:#fff}.answer.wrong{border:2px solid #e18080;background:#fff5f5}.answer.wrong .letter{background:#e18080;color:#fff}
+    .feedback{height:66px;margin-top:16px;border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;opacity:0;transform:translateY(4px);transition:.25s}.feedback.show{opacity:1;transform:none}.feedback.good{background:#eaf8f2;color:#2d8067}.feedback.bad{background:#fff0f0;color:#984e4e}.feedback strong{display:block;font-size:14px}.feedback span{font-size:12px}.next{border:0;border-radius:9px;padding:10px 15px;background:var(--navy);color:#fff;font-weight:800;cursor:pointer}
+    .side-head{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#adb5d3;font-weight:800;margin-bottom:15px}.score-card{border-radius:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);padding:18px}.score-row{display:flex;align-items:center;justify-content:space-between}.score-label{font-size:13px;color:#cdd3ea}.score-num{font-family:Georgia,serif;font-size:32px}.score-num small{font:700 13px Inter;color:#adb5d3}.score-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:16px}.dot{height:7px;border-radius:99px;background:rgba(255,255,255,.14)}.dot.done{background:#7ee0b7}.dot.wrongdone{background:#ea8d96}.dot.current{background:#fff}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.stat{border-radius:12px;background:rgba(255,255,255,.06);padding:13px}.stat span{display:block;font-size:11px;color:#b9c1dd}.stat strong{display:block;font-size:22px;margin-top:4px}.stat strong.correct-no{color:#85dfbb}.stat strong.wrong-no{color:#f2a0a8}
+    .divider{height:1px;background:rgba(255,255,255,.09);margin:16px 0}.topic{display:flex;align-items:center;gap:10px;padding:9px 0;color:#dfe4f7;font-size:13px}.topic .orb{width:27px;height:27px;border-radius:8px;background:rgba(255,255,255,.09);display:grid;place-items:center;font-size:14px}.topic.active{color:#fff;font-weight:800}.topic.active .orb{background:#6d79e7}.tip{margin-top:auto;border-radius:13px;background:rgba(255,255,255,.07);padding:14px;color:#cbd2e9;font-size:12px;line-height:1.55}.tip b{display:block;color:#fff;margin-bottom:4px}
+    .result{display:none;max-width:640px;margin:70px auto 0;text-align:center}.result.show{display:block}.result-orb{width:92px;height:92px;border-radius:50%;margin:0 auto 18px;background:linear-gradient(135deg,#7180ef,#9da6ff);display:grid;place-items:center;color:#fff;font:700 35px Georgia;border:9px solid #edf0ff}.result h2{font:700 36px Georgia;margin:8px}.result p{color:var(--muted)}.replay{border:0;border-radius:11px;background:#5968df;color:#fff;padding:13px 22px;font-weight:800;cursor:pointer;margin-top:12px}
+    @media(max-width:850px){.app{grid-template-columns:1fr}.app aside{position:fixed;bottom:0;left:0;right:0;height:72px;padding:10px 18px;z-index:5}.side-head,.score-grid,.stats,.divider,.topics,.tip{display:none}.score-card{display:flex;align-items:center;padding:8px 12px}.score-row{width:100%}.main{padding:20px}.stage{padding-bottom:88px}.answers{grid-template-columns:1fr}.app main{min-height:calc(100vh - 72px);padding:20px}.top-actions{display:none}h1.question{font-size:27px}.answer{min-height:68px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <main>
+    <div class="top"><div class="brand"><div class="brandmark">✦</div> Science Lab</div><div class="top-actions"><button class="iconbtn" id="sound" title="Toggle sound">♪</button><button class="iconbtn" id="restart" title="Restart">↻</button></div></div>
+    <div id="quiz">
+      <div class="progress-wrap"><div class="progress-meta"><span id="position">Question 1 of 10</span><span id="percent">10%</span></div><div class="progress-track"><div class="progress-bar" id="bar"></div></div></div>
+      <div class="stage"><div class="category"><i></i><span id="cat">Physical Science</span></div><h1 class="question" id="question"></h1><div class="answers" id="answers"></div><div class="feedback" id="feedback"><div><strong id="fbTitle"></strong><span id="fbText"></span></div><button class="next" id="next">Next →</button></div></div>
+    </div>
+    <div class="result" id="result"><div class="result-orb" id="resultOrb">0%</div><h2>Experiment complete!</h2><p id="resultText"></p><button class="replay" id="replay">Try again</button></div>
+  </main>
+  <aside><div class="side-head">Your score</div><div class="score-card"><div class="score-row"><span class="score-label">Progress</span><span class="score-num"><span id="score">0</span><small> / 10</small></span></div><div class="score-grid" id="dots"></div></div><div class="stats"><div class="stat"><span>Correct</span><strong class="correct-no" id="correct">0</strong></div><div class="stat"><span>Incorrect</span><strong class="wrong-no" id="wrong">0</strong></div></div><div class="divider"></div><div class="topics"><div class="topic active"><span class="orb">⚗</span><span id="activeTopic">Physical Science</span></div><div class="topic"><span class="orb">🌿</span>Life Science</div><div class="topic"><span class="orb">🌍</span>Earth &amp; Space</div></div><div class="tip"><b>Lab note</b>Read each question carefully. A wrong answer is just a clue for the next experiment.</div></aside>
+</div>
+<script>
+const questions=[
+ {cat:'Physical Science',q:'Which part of an atom carries a negative charge?',a:['Proton','Neutron','Electron','Nucleus'],c:2,e:'Electrons carry negative electrical charge.'},
+ {cat:'Physical Science',q:'What is the chemical symbol for gold?',a:['Ag','Au','Gd','Go'],c:1,e:'The symbol Au comes from the Latin word aurum.'},
+ {cat:'Life Science',q:'What process do plants use to convert sunlight into energy?',a:['Respiration','Photosynthesis','Fermentation','Transpiration'],c:1,e:'Photosynthesis uses sunlight to turn water and carbon dioxide into sugars.'},
+ {cat:'Life Science',q:'Which organ pumps blood around the human body?',a:['Lungs','Brain','Heart','Kidney'],c:2,e:'The heart pumps blood through the circulatory system.'},
+ {cat:'Earth & Space',q:'Which planet is known as the Red Planet?',a:['Venus','Mars','Jupiter','Mercury'],c:1,e:'Iron minerals in Martian soil give Mars its reddish appearance.'},
+ {cat:'Earth & Space',q:'What is the largest ocean on Earth?',a:['Atlantic','Indian','Pacific','Arctic'],c:2,e:'The Pacific Ocean is the largest and deepest ocean.'},
+ {cat:'Physical Science',q:'At sea level, water freezes at what temperature?',a:['0°C','32°F','Both of these','100°C'],c:2,e:'0°C is equal to 32°F, the freezing point of water.'},
+ {cat:'Life Science',q:'Which molecule carries genetic information?',a:['DNA','Glucose','Chlorophyll','Insulin'],c:0,e:'DNA stores the genetic instructions used in living organisms.'},
+ {cat:'Earth & Space',q:'How many moons does Earth have?',a:['One','Two','Three','None'],c:0,e:'Earth has one natural satellite: the Moon.'},
+ {cat:'Physical Science',q:'What force pulls objects toward the center of Earth?',a:['Friction','Magnetism','Gravity','Electricity'],c:2,e:'Gravity attracts objects with mass toward one another.'}
+];
+let index=0,correct=0,wrong=0,locked=false,answers=[];let sound=true;
+const $=s=>document.querySelector(s);
+function render(){locked=false;const q=questions[index];$('#position').textContent=`Question ${index+1} of ${questions.length}`;$('#percent').textContent=`${(index+1)*10}%`;$('#bar').style.width=`${(index+1)*10}%`;$('#cat').textContent=q.cat;$('#activeTopic').textContent=q.cat;$('#question').textContent=q.q;$('#feedback').className='feedback';$('#answers').innerHTML='';q.a.forEach((text,i)=>{const b=document.createElement('button');b.className='answer';b.innerHTML=`<span class="letter">${String.fromCharCode(65+i)}</span><span>${text}</span>`;b.onclick=()=>pick(i,b);$('#answers').appendChild(b)});}
+function pick(i,b){if(locked)return;locked=true;const q=questions[index];[...$('#answers').children].forEach((el,j)=>{el.disabled=true;if(j===q.c)el.classList.add('correct')});if(i===q.c){correct++;$('#feedback').className='feedback show good';$('#fbTitle').textContent='Correct!';b.classList.add('correct')}else{wrong++;b.classList.remove('correct');b.classList.add('wrong');$('#feedback').className='feedback show bad';$('#fbTitle').textContent='Not quite';}answers[index]=i===q.c;$('#fbText').textContent=q.e;$('#score').textContent=correct;$('#correct').textContent=correct;$('#wrong').textContent=wrong;document.querySelectorAll('.dot').forEach((d,j)=>{d.className='dot'+(j===index?(answers[j]?' done':' wrongdone'):(j<index?(answers[j]?' done':' wrongdone'):''))});}
+function next(){if(!locked)return;if(index<questions.length-1){index++;render()}else finish()}
+function finish(){if(wrong+correct<questions.length)return;$('#quiz').style.display='none';$('#result').classList.add('show');const pct=Math.round(correct/questions.length*100);$('#resultOrb').textContent=pct+'%';$('#resultText').textContent=`You answered ${correct} out of ${questions.length} questions correctly.`}
+$('#next').onclick=next;$('#replay').onclick=()=>restart();$('#restart').onclick=()=>restart();$('#sound').onclick=()=>{sound=!sound;$('#sound').style.opacity=sound?'1':'.35'};
+function restart(){index=0;correct=0;wrong=0;answers=[];$('#score').textContent=0;$('#correct').textContent=0;$('#wrong').textContent=0;$('#quiz').style.display='block';$('#result').classList.remove('show');render();}
+$('#dots').innerHTML=Array.from({length:10},()=>'<div class="dot"></div>').join('');render();
+</script>
+</body></html>
