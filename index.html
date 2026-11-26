@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>English Word Master</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <button class="brand" id="homeBtn" aria-label="Go to home">
+        <span class="brand-mark">W</span>
+        <span>English <strong>Word Master</strong></span>
+      </button>
+      <div class="stats">
+        <div class="stat"><span class="stat-icon flame">◆</span><div><small>Streak</small><strong id="streakTop">0</strong></div></div>
+        <div class="stat"><span class="stat-icon coin">●</span><div><small>Points</small><strong id="pointsTop">0</strong></div></div>
+        <button class="sound" id="soundBtn" aria-label="Toggle sound">♪</button>
+      </div>
+    </header>
+
+    <section id="homeView" class="view active">
+      <div class="hero">
+        <div>
+          <p class="eyebrow">DAILY CHALLENGE</p>
+          <h1>Master a word.<br><span>Master a language.</span></h1>
+          <p class="subtitle">Sharpen your vocabulary, one word at a time.</p>
+        </div>
+        <div class="hero-orbit" aria-hidden="true">
+          <div class="letter-card l1">A</div><div class="letter-card l2">B</div>
+          <div class="letter-card l3">C</div><div class="word-bubble">WORDS</div>
+        </div>
+      </div>
+
+      <div class="mode-grid">
+        <button class="mode-card featured" data-mode="mixed">
+          <span class="mode-icon">✦</span>
+          <span class="mode-copy"><strong>Quick Mastery</strong><small>10 mixed questions</small></span>
+          <span class="arrow">→</span>
+        </button>
+        <button class="mode-card" data-mode="synonyms"><span class="mode-icon">≈</span><span class="mode-copy"><strong>Synonyms</strong><small>Find similar meanings</small></span><span class="arrow">→</span></button>
+        <button class="mode-card" data-mode="antonyms"><span class="mode-icon">↔</span><span class="mode-copy"><strong>Antonyms</strong><small>Find opposite meanings</small></span><span class="arrow">→</span></button>
+        <button class="mode-card" data-mode="spelling"><span class="mode-icon">Aa</span><span class="mode-copy"><strong>Spelling</strong><small>Choose the correct form</small></span><span class="arrow">→</span></button>
+      </div>
+
+      <div class="progress-card">
+        <div class="progress-head"><div><small>YOUR PROGRESS</small><strong id="levelLabel">Beginner · Level 1</strong></div><span id="progressPct">0%</span></div>
+        <div class="progress-track"><div id="progressFill"></div></div>
+      </div>
+    </section>
+
+    <section id="gameView" class="view">
+      <div class="game-head">
+        <button class="back" id="backBtn">← <span>Exit</span></button>
+        <div class="progress-pill"><div class="mini-track"><div id="gameProgress"></div></div><strong id="questionCount">1 / 10</strong></div>
+        <div class="lives" id="lives">♥ ♥ ♥</div>
+      </div>
+
+      <div class="question-wrap">
+        <p class="category" id="category">VOCABULARY</p>
+        <h2 id="prompt">Choose the synonym</h2>
+        <div class="word-panel">
+          <button class="sound-word" id="speakBtn" title="Hear word">◖))</button>
+          <span id="word">BRILLIANT</span>
+        </div>
+        <div class="answers" id="answers"></div>
+        <button class="next-btn" id="nextBtn" disabled>Continue <span>→</span></button>
+      </div>
+    </section>
+
+    <section id="resultView" class="view">
+      <div class="result-card">
+        <div class="result-badge">★</div>
+        <p class="eyebrow">SESSION COMPLETE</p>
+        <h2 id="resultTitle">Great work!</h2>
+        <p id="resultMessage">You're building a stronger vocabulary.</p>
+        <div class="result-stats">
+          <div><strong id="correctResult">8</strong><small>Correct</small></div>
+          <div><strong id="accuracyResult">80%</strong><small>Accuracy</small></div>
+          <div><strong id="pointsResult">+80</strong><small>Points</small></div>
+        </div>
+        <button class="play-again" id="againBtn">Play again <span>↻</span></button>
+        <button class="home-link" id="resultHomeBtn">Back to home</button>
+      </div>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
