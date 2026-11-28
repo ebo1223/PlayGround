@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Colors</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <button class="icon-btn" id="homeBtn" aria-label="Home">⌂</button>
+      <div class="brand"><span class="brand-star">★</span><span>Happy Colors</span></div>
+      <button class="icon-btn sound-btn" id="soundBtn" aria-label="Toggle sound">♪</button>
+    </header>
+
+    <section class="workspace">
+      <aside class="palette-panel">
+        <h2>Colors</h2>
+        <div class="palette" id="palette"></div>
+        <button class="tool-button" id="eraserBtn" aria-label="Eraser"><span>◒</span><b>Erase</b></button>
+      </aside>
+
+      <section class="canvas-card">
+        <div class="paper" id="paper">
+          <svg id="drawing" viewBox="0 0 520 520" role="img" aria-label="Coloring page of a cheerful butterfly">
+            <g fill="#ffffff" stroke="#333333" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+              <!-- left wing -->
+              <path class="region" data-region="left-top" d="M252 252 C208 185 130 95 76 115 C21 136 34 221 83 259 C127 294 196 287 252 252Z"/>
+              <path class="region" data-region="left-bottom" d="M252 273 C193 263 109 279 77 333 C45 387 97 420 143 396 C195 369 226 319 252 273Z"/>
+              <!-- right wing -->
+              <path class="region" data-region="right-top" d="M268 252 C312 185 390 95 444 115 C499 136 486 221 437 259 C393 294 324 287 268 252Z"/>
+              <path class="region" data-region="right-bottom" d="M268 273 C327 263 411 279 443 333 C475 387 423 420 377 396 C325 369 294 319 268 273Z"/>
+              <!-- body -->
+              <ellipse class="region" data-region="body" cx="260" cy="286" rx="20" ry="79"/>
+              <circle class="region" data-region="head" cx="260" cy="205" r="29"/>
+              <!-- wing decorations -->
+              <circle class="region" data-region="spot1" cx="139" cy="201" r="35"/>
+              <circle class="region" data-region="spot2" cx="381" cy="201" r="35"/>
+              <circle class="region" data-region="spot3" cx="150" cy="325" r="27"/>
+              <circle class="region" data-region="spot4" cx="370" cy="325" r="27"/>
+              <!-- antennae -->
+              <path d="M247 183 C223 147 213 119 193 104" fill="none"/>
+              <path d="M273 183 C297 147 307 119 327 104" fill="none"/>
+              <circle cx="188" cy="100" r="9" fill="#333333" stroke="none"/>
+              <circle cx="332" cy="100" r="9" fill="#333333" stroke="none"/>
+            </g>
+          </svg>
+        </div>
+        <div class="progress-wrap"><div class="progress-label"><span>Picture Progress</span><b id="progressText">0%</b></div><div class="progress-track"><div class="progress-fill" id="progressFill"></div></div></div>
+      </section>
+
+      <aside class="actions-panel">
+        <button class="action-btn" id="undoBtn"><span>↶</span><b>Undo</b></button>
+        <button class="action-btn" id="clearBtn"><span>⌫</span><b>Clear</b></button>
+        <button class="action-btn" id="nextBtn"><span>→</span><b>Next</b></button>
+      </aside>
+    </section>
+  </main>
+  <div class="toast" id="toast">Beautiful! 🎉</div>
+  <script src="script.js"></script>
+</body>
+</html>
