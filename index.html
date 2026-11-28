@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ghost Hunter</title>
+  <style>
+    :root { color-scheme: dark; --lime:#c8ff3d; --cyan:#67e8f9; --ink:#050809; }
+    * { box-sizing:border-box; }
+    body { margin:0; overflow:hidden; background:#020504; color:#edf7ee; font-family:"Trebuchet MS",system-ui,sans-serif; }
+    canvas { display:block; width:100vw; height:100vh; }
+    #hud { position:fixed; inset:0; pointer-events:none; }
+    .top { position:absolute; left:24px; right:24px; top:18px; display:flex; justify-content:space-between; align-items:flex-start; }
+    .brand { color:var(--lime); font-size:13px; letter-spacing:.28em; font-weight:900; text-shadow:0 0 16px #86ca37; }
+    .brand b { display:block; color:white; font-family:Georgia,serif; font-size:31px; letter-spacing:.02em; margin-top:2px; }
+    .bars { width:260px; }
+    .meter-head { display:flex; justify-content:flex-end; gap:8px; margin-bottom:5px; font-size:11px; letter-spacing:.16em; }
+    .meter { height:8px; background:#1a201e; border:1px solid #4b5952; transform:skewX(-12deg); overflow:hidden; }
+    #sanityFill { height:100%; width:100%; background:linear-gradient(90deg,#77ca65,var(--lime)); box-shadow:0 0 12px #aaff44; transition:.25s; }
+    #ammo { position:absolute; right:30px; bottom:24px; text-align:right; }
+    #ammo strong { display:block; font-size:48px; line-height:.85; color:white; text-shadow:0 3px 0 #111; }
+    #ammo span { font-size:11px; letter-spacing:.22em; color:#aebbb3; }
+    #objective { position:absolute; left:24px; bottom:28px; max-width:440px; border-left:3px solid var(--lime); padding:7px 12px; background:linear-gradient(90deg,rgba(3,10,7,.82),transparent); }
+    #objective small { display:block; color:var(--lime); letter-spacing:.17em; font-size:10px; }
+    #objective b { font-size:14px; }
+    #crosshair { position:absolute; left:50%; top:50%; width:22px; height:22px; transform:translate(-50%,-50%); }
+    #crosshair:before,#crosshair:after { content:""; position:absolute; background:rgba(232,255,232,.85); box-shadow:0 0 5px white; }
+    #crosshair:before { width:22px;height:1px;left:0;top:10px; } #crosshair:after { height:22px;width:1px;left:10px;top:0; }
+    #reticleDot { position:absolute;width:3px;height:3px;border-radius:50%;background:white;left:9.5px;top:9.5px; }
+    #prompt { position:absolute; left:50%; bottom:118px; transform:translateX(-50%); padding:8px 14px; background:rgba(5,10,8,.88); border:1px solid #718177; opacity:0; transition:.15s; font-size:12px; letter-spacing:.08em; }
+    #prompt.show { opacity:1; }
+    #toast { position:absolute; left:50%; top:22%; transform:translate(-50%,-20px); text-align:center; opacity:0; transition:.35s; }
+    #toast.show { opacity:1; transform:translate(-50%,0); }
+    #toast b { display:block; color:white; font-family:Georgia,serif; font-size:27px; }
+    #toast span { color:var(--lime); font-size:11px; letter-spacing:.25em; }
+    #overlay { position:absolute; inset:0; display:grid; place-items:center; pointer-events:auto; background:radial-gradient(circle at 50% 45%,rgba(18,38,28,.34),rgba(1,4,3,.94)); transition:.5s; }
+    #overlay.hidden { opacity:0; pointer-events:none; }
+    .menu { width:min(680px,86vw); text-align:center; }
+    .menu-kicker { color:var(--lime); letter-spacing:.38em; font-size:11px; }
+    .menu h1 { margin:8px 0 2px; font-family:Georgia,serif; font-size:clamp(52px,9vw,104px); line-height:.85; text-shadow:0 12px 30px #000; }
+    .menu h1 em { color:var(--lime); font-style:normal; }
+    .menu p { color:#abb6ae; max-width:480px; margin:22px auto; line-height:1.6; font-size:14px; }
+    #start { pointer-events:auto; border:1px solid var(--lime); background:rgba(166,220,55,.11); color:white; padding:14px 28px; font-weight:900; letter-spacing:.18em; cursor:pointer; box-shadow:0 0 25px rgba(156,213,57,.12); }
+    #start:hover { background:var(--lime); color:#091008; }
+    .controls { margin-top:28px; display:flex; justify-content:center; gap:24px; color:#7f8d84; font-size:10px; letter-spacing:.1em; }
+    .controls b { color:#dce8df; }
+    #damage { position:absolute; inset:0; box-shadow:inset 0 0 130px 20px rgba(176,17,35,.0); transition:.15s; }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="hud">
+    <div class="top">
+      <div class="brand">NIGHTWATCH DIVISION<b>GHOST HUNTER</b></div>
+      <div class="bars"><div class="meter-head"><span>SANITY</span><span id="sanityText">100%</span></div><div class="meter"><div id="sanityFill"></div></div></div>
+    </div>
+    <div id="crosshair"><div id="reticleDot"></div></div>
+    <div id="prompt"></div>
+    <div id="toast"><b>Evidence logged</b><span>EMF 5 DETECTED</span></div>
+    <div id="objective"><small>CURRENT OBJECTIVE</small><b id="objectiveText">Find and identify the entity</b></div>
+    <div id="ammo"><strong id="ammoCount">6</strong><span>SALT SHELLS</span></div>
+    <div id="damage"></div>
+    <div id="overlay">
+      <div class="menu">
+        <div class="menu-kicker">CLASSIFIED CASE 04–31</div>
+        <h1>GHOST <em>HUNTER</em></h1>
+        <p>Enter the abandoned estate. Gather spectral evidence, track the apparition, and banish it before your sanity gives way.</p>
+        <button id="start">BEGIN INVESTIGATION</button>
+        <div class="controls"><span><b>WASD</b> MOVE</span><span><b>MOUSE</b> LOOK</span><span><b>E</b> INTERACT</span><span><b>R</b> RELOAD</span></div>
+      </div>
+    </div>
+  </div>
+<script>
+const canvas=document.getElementById('game'), ctx=canvas.getContext('2d');
+let W,H,dpr,keys={},running=false,mouse={x:0,y:0},last=0;
+const state={x:0,y:-4,a:0,sanity:100,ammo:6,evidence:0,ghostVisible:false,banished:false,damageFlash:0,flashlight:1};
+const rooms=[
+ {x:-7,y:-8,w:14,h:5,type:'FOYER'}, {x:-7,y:-3,w:14,h:6,type:'HALL'},
+ {x:-7,y:3,w:5,h:5,type:'LIBRARY'}, {x:2,y:3,w:5,h:5,type:'CHAPEL'},
+ {x:-12,y:-3,w:5,h:6,type:'STUDY'}
+];
+const evidence=[{x:-5,y:-6,got:false},{x:-10,y:-1,got:false},{x:4,y:5,got:false}];
+const ghost={x:4,y:-6,r:0.45,phase:0,health:3};
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0)}
+addEventListener('resize',resize);resize();
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLower===undefined&&e.key.toLowerCase==='e'){};if(e.key.toLowerCase()==='e')interact();if(e.key.toLowerCase()==='r')reload();});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+canvas.addEventListener('click',()=>{if(running)shoot()});
+addEventListener('mousemove',e=>{if(running&&document.pointerLockElement===canvas){state.a+=e.movementX*.0022}else mouse={x:e.clientX,y:e.clientY}});
+canvas.addEventListener('mousedown',()=>{if(running)shoot()});
+document.getElementById('start').addEventListener('click',()=>{document.getElementById('overlay').classList.add('hidden');running=true;canvas.requestPointerLock();requestAnimationFrame(loop)});
+function blocked(x,y){for(const r of rooms){if(x>r.x&&x<r.x+r.w&&y>r.y&&y<r.y+r.h)return false}return true}
+function interact(){
+ for(const e of evidence){if(!e.got&&Math.hypot(state.x-e.x,state.y-e.y)<1.1){e.got=true;state.evidence++;toast('Evidence logged','EMF 5 DETECTED');updateObjective();return}}
+ if(!ghost.health&&Math.hypot(state.x-ghost.x,state.y-ghost.y)<1.5){} 
+}
+function reload(){if(state.ammo<6){state.ammo=6;toast('Weapon restored','SALT SHELLS LOADED')}}
+function shoot(){
+ if(state.ammo<=0||state.banished)return; state.ammo--; document.getElementById('ammoCount').textContent=state.ammo;
+ const angleDiff=Math.atan2(ghost.y-state.y,ghost.x-state.x)-state.a;let diff=Math.atan2(Math.sin(angleDiff),Math.cos(angleDiff));
+ const dist=Math.hypot(ghost.x-state.x,ghost.y-state.y);
+ if(Math.abs(diff)<.16&&dist<7&&state.ghostVisible){ghost.health--;toast('Spectral strike','ENTITY WEAKENED');if(ghost.health<=0){state.banished=true;toast('Entity banished','CASE RESOLVED');updateObjective();}}
+}
+function toast(a,b){const t=document.getElementById('toast');t.querySelector('b').textContent=a;t.querySelector('span').textContent=b;t.classList.add('show');clearTimeout(t.timer);t.timer=setTimeout(()=>t.classList.remove('show'),1800)}
+function updateObjective(){document.getElementById('objectiveText').textContent=state.banished?'Case complete — return to daylight':`Gather evidence (${state.evidence}/3) and confront the entity`}
+function project(x,y,z=0){let dx=x-state.x,dy=y-state.y;let ca=Math.cos(-state.a),sa=Math.sin(-state.a);let rx=dx*ca-dy*sa,rz=dx*sa+dy*ca;if(rz<.08)return null;let sf=H/(rz*1.15),sx=W/2+rx*sf,sy=H*.56-z*sf;return {x:sx,y:sy,s:sf,d:rz}}
+function poly(points,fill,stroke=''){ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.stroke()}}
+function update(dt){
+ let forward=(keys.w?1:0)-(keys.s?1:0), side=(keys.d?1:0)-(keys.a?1:0);let sp=dt*2.2;
+ let dx=(Math.cos(state.a)*forward+Math.cos(state.a+Math.PI/2)*side)*sp,dy=(Math.sin(state.a)*forward+Math.sin(state.a+Math.PI/2)*side)*sp;
+ if(!blocked(state.x+dx,state.y))state.x+=dx;if(!blocked(state.x,state.y+dy))state.y+=dy;
+ ghost.phase+=dt;if(!state.banished){let angle=Math.atan2(state.y-ghost.y,state.x-ghost.x);ghost.x+=Math.cos(angle)*dt*.11;ghost.y+=Math.sin(angle)*dt*.11;
+  let gd=Math.hypot(state.x-ghost.x,state.y-ghost.y);if(gd<1.4)state.sanity-=dt*7}
+ ghostVisible=false;let angle=Math.atan2(ghost.y-state.y,ghost.x-state.x),diff=Math.atan2(Math.sin(angle-state.a),Math.cos(angle-state.a));if(!state.banished&&Math.abs(diff)<.55&&Math.hypot(ghost.x-state.x,ghost.y-state.y)<8)ghostVisible=true;
+ state.sanity=Math.max(0,state.sanity);document.getElementById('sanityFill').style.width=state.sanity+'%';document.getElementById('sanityText').textContent=Math.round(state.sanity)+'%';
+ let nearest=9;for(const e of evidence)if(!e.got)nearest=Math.min(nearest,Math.hypot(state.x-e.x,state.y-e.y));
+ let prompt=document.getElementById('prompt');prompt.className='';for(const e of evidence){if(!e.got&&Math.hypot(state.x-e.x,state.y-e.y)<1.1){prompt.textContent='[ E ] LOG EVIDENCE';prompt.className='show';break}}
+ document.getElementById('damage').style.boxShadow=`inset 0 0 ${120+60*(1-state.sanity/100)}px ${20+30*(1-state.sanity/100)}px rgba(176,17,35,${(1-state.sanity/100)*.55})`;
+}
+function wallQuad(x1,y1,x2,y2,z1,z2){let a=project(x1,y1,z1),b=project(x1,y1,z2),c=project(x2,y2,z2),d=project(x2,y2,z1);if(a&&b&&c&&d)poly([a,b,c,d],'#252e29','#3c4a42')}
+function render(){
+ ctx.fillStyle='#080d0b';ctx.fillRect(0,0,W,H);
+ // ceiling/floor perspective
+ ctx.fillStyle='#101512';ctx.beginPath();ctx.moveTo(0,H*.56);ctx.lineTo(W,H*.56);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.fill();
+ ctx.fillStyle='#171e1a';ctx.fillRect(0,0,W,H*.56);
+ // baseboards and floor
+ ctx.fillStyle='#1d2922';ctx.fillRect(0,H*.56,W,H*.012);
+ for(let i=-10;i<12;i+=2){let p=project(i,-10,0);if(p)ctx.fillStyle='#29352e',ctx.fillRect(p.x,H*.56,2,H*.44)}
+ // room walls, floorboards and furniture
+ for(const r of rooms){
+  wallQuad(r.x,r.y,r.x+r.w,r.y,0,2.8);wallQuad(r.x+r.w,r.y,r.x+r.w,r.y+r.h,0,2.8);wallQuad(r.x+r.w,r.y+r.h,r.x,r.y+r.h,0,2.8);wallQuad(r.x,r.y+r.h,r.x,r.y,0,2.8);
+ }
+ // furniture silhouettes
+ const furn=[[-11,-.8,'desk'],[-11,1.2,'shelf'],[-5,-5,'table'],[1,-1,'pew'],[4,5,'altar']];
+ for(const f of furn){let p=project(f[0],f[1],0);if(p&&p.d<14){ctx.fillStyle='#0b100e';ctx.fillRect(p.x-p.s*.65,p.y-p.s*.45,p.s*1.3,p.s*.45)}}
+ // evidence markers
+ for(const e of evidence)if(!e.got){let p=project(e.x,e.y,.15);if(p&&p.d<15){ctx.save();ctx.translate(p.x,p.y);ctx.shadowBlur=18;ctx.shadowColor='#86e7b0';ctx.fillStyle='#a4ffc3';ctx.beginPath();ctx.arc(0,0,Math.max(2,p.s*.05),0,Math.PI*2);ctx.fill();ctx.restore()}}
+ // ghost
+ if(!state.banished){let p=project(ghost.x,ghost.y,1);if(p&&p.d<12){ctx.save();ctx.translate(p.x,p.y);let pulse=1+Math.sin(ghost.phase*3)*.08;ctx.globalAlpha=.42+Math.sin(ghost.phase*2)*.12;ctx.fillStyle='#bce9d8';ctx.shadowBlur=35;ctx.shadowColor='#b7ffe0';ctx.beginPath();ctx.moveTo(0,-p.s*.55*pulse);ctx.bezierCurveTo(p.s*.32,-p.s*.45,p.s*.35,p.s*.25,p.s*.22,p.s*.48);ctx.bezierCurveTo(p.s*.1,p.s*.32,0,p.s*.48,-p.s*.1,p.s*.30);ctx.bezierCurveTo(-p.s*.30,p.s*.50,-p.s*.38,p.s*.08,-p.s*.31,-p.s*.42);ctx.bezierCurveTo(-p.s*.25,-p.s*.55,-p.s*.12,-p.s*.60,0,-p.s*.55*pulse);ctx.fill();ctx.restore()}}
+ // flashlight cone
+ let grd=ctx.createRadialGradient(W/2,H*.52,30,W/2,H*.52,H*.72);grd.addColorStop(0,'rgba(210,255,194,.12)');grd.addColorStop(.45,'rgba(170,220,150,.025)');grd.addColorStop(1,'rgba(0,0,0,.75)');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+ // vignette
+ grd=ctx.createRadialGradient(W/2,H/2,H*.25,W/2,H/2,H*.75);grd.addColorStop(0,'rgba(0,0,0,0)');grd.addColorStop(1,'rgba(0,0,0,.78)');ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+}
+function loop(now){let dt=Math.min((now-last)/1000||0,.05);last=now;if(running&&!state.banished){update(dt)}else if(running&&state.banished){update(dt); }render();requestAnimationFrame(loop)}
+</script>
+</body>
+</html>
