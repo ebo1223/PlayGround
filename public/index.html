@@ -13,8 +13,7 @@
 <script>
 const c=document.getElementById('c'),x=c.getContext('2d');let W,H,DPR;function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;c.width=W*DPR;c.height=H*DPR;c.style.width=W+'px';c.style.height=H+'px';x.setTransform(DPR,0,0,DPR,0,0)}addEventListener('resize',resize);resize();
 let keys={},blood=120,power=80,army=24,night=0,duration=75,paused=false,ended=false,shield=0,slash=0,invul=0;const player={x:W*.5,y:H*.62,r:12};let enemies=[],particles=[];
-function rand(a,b){return a+Math.random*(b-a)}addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key===' ')e.prevent(){if(!paused&&!ended)attack()};if(e.key==='Escape')togglePause()});addEvent('keyup');function addEvent(n){addEventListener(n==='keyup'?'keyup':n,e=>keys[e.key.toLower]=false)}
-addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);function toast(t){let q=document.getElementById('toast');q.textContent=t;q.classList.add('show');clearTimeout(q.t);q.t=setTimeout(()=>q.classList.remove('show'),1600)}
+function rand(a,b){return a+Math.random()*(b-a)}addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key===' '){e.preventDefault();if(!paused&&!ended)attack()}if(e.key==='Escape')togglePause()});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);function toast(t){let q=document.getElementById('toast');q.textContent=t;q.classList.add('show');clearTimeout(q.t);q.t=setTimeout(()=>q.classList.remove('show'),1600)}
 function spend(n){if(power<n){toast('Insufficient power');return false}power-=n;update();return true}
 document.getElementById('feed').onclick=()=>{if(spend(15)){blood=Math.min(999,blood+30);toast('The court is nourished')}};
 document.getElementById('summon').onclick=()=>{if(spend(25)){army+=8;toast('Newborns answer the summons')}};
